@@ -19,7 +19,7 @@ import (
 	"github.com/limetext/lime-backend/lib/keys"
 	"github.com/limetext/lime-backend/lib/log"
 	"github.com/limetext/lime-backend/lib/render"
-	// _ "github.com/limetext/lime-backend/lib/sublime"
+	_ "github.com/limetext/lime-backend/lib/sublime"
 	"github.com/limetext/lime-backend/lib/textmate"
 	"github.com/limetext/lime-backend/lib/util"
 	. "github.com/limetext/text"
