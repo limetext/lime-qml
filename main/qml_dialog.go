@@ -31,7 +31,7 @@ Item {MessageDialog {
 	engine.Context().SetVar("q", q)
 	component, err := engine.LoadString("dialog.qml", src)
 	if err != nil {
-		log.Errorf("Unable to instanciate dialog: %s", err)
+		log.Error("Unable to instanciate dialog: %s", err)
 		return 0
 	}
 	var wg sync.WaitGroup

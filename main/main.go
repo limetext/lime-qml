@@ -13,7 +13,6 @@ import (
 	"github.com/limetext/lime-backend/lib"
 	_ "github.com/limetext/lime-backend/lib/commands"
 	"github.com/limetext/lime-backend/lib/log"
-	"github.com/limetext/lime-backend/lib/textmate"
 )
 
 const (
@@ -21,12 +20,7 @@ const (
 	render_chan_len = 2
 )
 
-var (
-	t *qmlfrontend
-
-	scheme *textmate.Theme
-	blink  bool
-)
+var t *qmlfrontend
 
 func main() {
 	// Need to lock the OS thread as OSX GUI requires GUI stuff to run in the main thread

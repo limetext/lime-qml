@@ -25,7 +25,10 @@ import (
 	. "github.com/limetext/text"
 )
 
-var limeViewComponent qml.Object
+var (
+	limeViewComponent qml.Object
+	scheme            *textmate.Theme
+)
 
 const (
 	batching_enabled = true
@@ -361,7 +364,7 @@ func (t *qmlfrontend) loop() (err error) {
 
 	watch, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Errorf("Unable to create file watcher: %s", err)
+		log.Error("Unable to create file watcher: %s", err)
 		return
 	}
 	defer watch.Close()
