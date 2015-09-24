@@ -2,14 +2,26 @@ os:
   - osx
   - linux
 
-sudo: required
+sudo: false
 
 language: go
 
-go: 1.4
+go: 1.5.1
+
+addons:
+  apt:
+    sources:
+      - deadsnakes
+      - ubuntu-sdk-team
+    packages:
+      - libonig-dev
+      - python3.5
+      - python3.5-dev
+      - qtbase5-private-dev
+      - qtdeclarative5-private-dev
 
 install:
-  - ./tasks/general/ci/install.sh github.com/limetext/lime-qml/main
+  - ./tasks/general/ci/install.sh
   - ./tasks/local/ci/install.sh
 
 script:

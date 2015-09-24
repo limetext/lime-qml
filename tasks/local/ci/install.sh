@@ -2,10 +2,19 @@
 
 if [ "$TRAVIS_OS_NAME" == "linux" ]; then
 
-	# install qml frontend dependencies
-	sudo add-apt-repository -y ppa:ubuntu-sdk-team/ppa
-	sudo apt-get update -qq
-	sudo apt-get install -qq qtbase5-private-dev qtdeclarative5-private-dev
+	echo "Package installs configured in .travis.yml"
+
+	# Add the following to .travis.yml:
+
+	# sudo: false
+	#
+	# addons:
+	#   apt:
+	#     sources:
+	#       - ubuntu-sdk-team
+	#     packages:
+	#       - qtbase5-private-dev
+	#       - qtdeclarative5-private-dev
 
 elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
 
