@@ -7,7 +7,7 @@ if [ "$TRAVIS_OS_NAME" == "linux" ]; then
 elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
 
 	brew install qt5
-	brew link --force qt5 --with-developer
+	brew link --force qt5
 
 else
 
