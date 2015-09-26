@@ -2,7 +2,7 @@ os:
   - osx
   - linux
 
-sudo: false
+sudo: required
 
 language: go
 
@@ -17,7 +17,6 @@ addons:
       - libonig-dev
       - python3.5
       - python3.5-dev
-      - qtbase5-private-dev
       - qtdeclarative5-private-dev
 
 install:

@@ -2,19 +2,7 @@
 
 if [ "$TRAVIS_OS_NAME" == "linux" ]; then
 
-	echo "Package installs configured in .travis.yml"
-
-	# Add the following to .travis.yml:
-
-	# sudo: false
-	#
-	# addons:
-	#   apt:
-	#     sources:
-	#       - ubuntu-sdk-team
-	#     packages:
-	#       - qtbase5-private-dev
-	#       - qtdeclarative5-private-dev
+    sudo apt-get -qy install qtbase5-private-dev
 
 elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
 
