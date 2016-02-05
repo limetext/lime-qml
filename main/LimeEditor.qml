@@ -1,0 +1,508 @@
+import QtQuick 2.5
+import QtQuick.Layouts 1.0
+
+Item {
+    id: editorRoot
+
+    property var linesModel
+    property var myView
+    // property bool isMinimap: false
+    property int fontSize: 12
+    property string fontFace: "Menlo"
+    property var cursor: Qt.IBeamCursor
+    property bool ctrl: false
+
+    function getCurrentSelection() {
+        if (!myView || !myView.back()) return null;
+        return myView.back().sel();
+    }
+
+
+
+    // onFontSizeChanged: {
+    //     dummy.font.pointSize = fontSize;
+    // }
+
+
+    FontMetrics {
+      id: fontMetrics
+      font.family: editorRoot.fontFace
+      font.pointSize: editorRoot.fontSize
+    }
+
+
+    ListView {
+        id: listView
+        model: linesModel
+        anchors.fill: parent
+        boundsBehavior: Flickable.StopAtBounds
+        // cacheBuffer: contentHeight < 0? 0 : contentHeight
+        interactive: false
+        clip: true
+        z: 100
+
+        property bool showBars: false
+        property var cursor: editorRoot.cursor
+
+        delegate:
+          Canvas {
+            id: canvas
+            property var line: !myView ? null : myView.line(index)
+            property var lineText: !line ? null : line.text
+
+            onLineTextChanged: {
+              requestPaint();
+            }
+
+            // TODO: why doesn't this work?
+            // property var spaceWidth: fontMetrics.advanceWidth(' ')
+            // property var tabWidth: spaceWidth * 4
+
+            width: parent.width
+            height: fontMetrics.lineSpacing
+
+            onPaint: {
+              if (line == null) return;
+              var l = line;
+
+              var spaceWidth = fontMetrics.advanceWidth(' ');
+              var tabWidth = spaceWidth * 4;
+
+              var ctx = canvas.getContext("2d");
+
+              ctx.font = editorRoot.fontSize + "pt \"" + editorRoot.fontFace + "\"";
+
+              var defaultColor = "#ffffff";
+              var currentColor = defaultColor;
+              ctx.fillStyle = currentColor;
+
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+              var len = l.chunksLen();
+              var x = 0;
+              var y = fontMetrics.ascent;
+              for (var i = 0; i < len; i++) {
+                var c = l.chunk(i);
+
+                if (c.foreground === "") {
+                  if (currentColor !== defaultColor)
+                    ctx.fillStyle = currentColor = defaultColor;
+                } else {
+                  if (currentColor !== c.foreground)
+                    ctx.fillStyle =  '#' + (currentColor = c.foreground);
+                }
+                var ctext = c.text;
+                var ctlen = ctext.length;
+                var j = 0;
+
+                // TODO: Are tabs always at the beginning of the chunk?
+                while (j < ctlen && ctext[j] === '\t') {
+                  j++;
+                  var yval = y - fontMetrics.strikeOutPosition;
+                  ctx.fillRect(x+2, yval, tabWidth-4, 1);
+                  x += tabWidth;
+                }
+
+                ctext = ctext.slice(j);
+                var cwidth = fontMetrics.advanceWidth(ctext);
+
+                ctx.fillText(ctext, x, y);
+                x += cwidth;
+              }
+            }
+          }
+
+        states: [
+            State {
+                name: "ShowBars"
+                when: listView.movingVertically || listView.movingHorizontally || listView.flickingVertically || listView.flickingHorizontally
+                PropertyChanges {
+                    target: listView
+                    showBars: true
+                }
+            },
+            State {
+                name: "HideBars"
+                when: !listView.movingVertically && !listView.movingHorizontally && !listView.flickingVertically && !listView.flickingHorizontally
+                PropertyChanges {
+                    target: listView
+                    showBars: false
+                }
+            }
+        ]
+
+        MouseArea {
+            property var point: new Object()
+
+            x: 0
+            y: 0
+            cursorShape: parent.cursor
+            propagateComposedEvents: true
+            height: parent.height
+            width: parent.width-verticalScrollBar.width
+
+
+            function colFromMouseX(lineIndex, mouseX) {
+
+                const printDebug = false;
+
+                var line = myView.back().buffer().line(myView.back().buffer().textPoint(lineIndex, 0)),
+                    lineText = myView.back().buffer().substr(line);
+
+                if (printDebug) console.log("Raw line: ", myView.line(lineIndex).text);
+
+                if (printDebug) console.log("Line: ", JSON.stringify(lineText), lineText.length);
+                if (printDebug) console.log("mouseX: ", mouseX);
+
+                // dummy.text = lineText;
+                // console.log("Dummy width: ", dummy.width);
+
+                // var context = measure.getContext("2d");
+                // context.font = editorRoot.fontSize + "pt " + editorRoot.fontFace;
+
+                // var fullWidth = context.measureText(lineText).width;
+                var fullWidth = fontMetrics.advanceWidth(lineText);
+                if (printDebug) console.log("Line width: ", JSON.stringify(fullWidth));
+
+                // testRect.width = fullWidth;
+
+                // if the click was farther right than the last character of
+                // the line then return the last character's column
+                if(mouseX > fullWidth) {
+                  if (printDebug) console.log("bigwidth: ", myView.back().buffer().rowCol(line.b)[1], ", ", lineText.length);
+                  return lineText.length; //myView.back().buffer().rowCol(line.b)[1]
+                }
+
+                // fixme: why do we need this magic number? because of floor instead of round
+                var OFFSET_MAGIC_NUMBER = 0.5;
+
+                // calculate a column from a given mouse x coordinate and the line text.
+                var col = Math.floor(OFFSET_MAGIC_NUMBER + lineText.length * (mouseX / fullWidth));
+                if (col < 0) col = 0;
+
+                // Trying to find closest column to clicked position
+                // dummy.text = "<span style=\"white-space:pre\">" + lineText.substr(0, col) + "</span>";
+                // var partialWidth = context.measureText(lineText.substr(0, col)).width;
+                var partialWidth = fontMetrics.advanceWidth(lineText.substr(0, col));
+                if (printDebug) console.log("partialWidth: ", partialWidth);
+
+                var d = Math.abs(mouseX - partialWidth);
+                var add = (mouseX > partialWidth) ? 1 : -1;
+                if (printDebug) console.log("add: ", add);
+
+                var prevWidth = partialWidth;
+                var oldcol = col;
+                while (col >= 0 && col < lineText.length && Math.abs(mouseX - partialWidth) <= d) {
+                    d = Math.abs(mouseX - partialWidth);
+                    col += add;
+                    prevWidth = partialWidth;
+                    // partialWidth = context.measureText(lineText.substr(0, col)).width;
+                    partialWidth = fontMetrics.advanceWidth(lineText.substr(0, col));
+                    // dummy.text = "<span style=\"white-space:pre\">" + lineText.substr(0, col) + "</span>";
+                }
+                if (printDebug) console.log("widths: ", prevWidth, partialWidth);
+                if (printDebug) console.log("diffs: ", Math.abs(mouseX - prevWidth), Math.abs(mouseX - partialWidth), d);
+                // if (Math.abs(mouseX - prevWidth) < d) {
+                  // col -= add;
+                // }
+                // else console.log("nope");
+
+                col -= add;
+
+                if (col > lineText.length) col = lineText.length;
+
+                if (printDebug) console.log("cols: ", oldcol, col)
+
+                return col;
+            }
+
+
+            // Rectangle {
+            //   id: testRect
+            //   height: 1000
+            //   opacity: 0.1
+            //   z: 10000
+            // }
+
+            onPositionChanged: {
+                var item  = listView.itemAt(0, mouse.y+listView.contentY),
+                    index = listView.indexAt(0, mouse.y+listView.contentY),
+                    selection = getCurrentSelection();
+
+                if (item != null && selection != null) {
+                    var col = colFromMouseX(index, mouse.x);
+                    point.r = myView.back().buffer().textPoint(index, col);
+                    if (point.p != null && point.p != point.r) {
+                        // Remove the last region and replace it with new one
+                        var r = selection.get(selection.len()-1);
+                        selection.substract(r);
+                        selection.add(myView.region(point.p, point.r));
+                        onSelectionModified();
+                    }
+                }
+                point.r = null;
+            }
+
+            onPressed: {
+                // TODO:
+                // Changing caret position doesn't work on empty lines
+                // if (!isMinimap) {
+
+                    var item  = listView.itemAt(0, mouse.y+listView.contentY),
+                        index = listView.indexAt(0, mouse.y+listView.contentY);
+
+                    if (item != null) {
+                        var col = colFromMouseX(index, mouse.x);
+                        point.p = myView.back().buffer().textPoint(index, col)
+
+                        if (!ctrl) {
+                            getCurrentSelection().clear();
+                        }
+
+                        getCurrentSelection().add(myView.region(point.p, point.p))
+                        onSelectionModified();
+                    }
+                // }
+            }
+
+            onDoubleClicked: {
+                // if (!isMinimap) {
+
+                    var item  = listView.itemAt(0, mouse.y+listView.contentY),
+                        index = listView.indexAt(0, mouse.y+listView.contentY);
+
+                    if (item != null) {
+                        var col = colFromMouseX(index, mouse.x);
+                        point.p = myView.back().buffer().textPoint(index, col)
+
+                        if (!ctrl) {
+                            getCurrentSelection().clear();
+                        }
+
+                        getCurrentSelection().add(myView.back().expandByClass(myView.region(point.p, point.p), 1|2|4|8))
+                        onSelectionModified();
+                    }
+                // }
+            }
+
+            onWheel: {
+                var delta = wheel.pixelDelta,
+                    scaleFactor = 30;
+
+                if (delta.x == 0 && delta.y == 0) {
+                    delta = wheel.angleDelta;
+                    scaleFactor = 15;
+                }
+
+                scaleFactor /= 3;
+
+                listView.flick(delta.x*scaleFactor, delta.y*scaleFactor);
+                wheel.accepted = true;
+            }
+        }
+
+        Rectangle {
+            id: verticalScrollBar
+
+            // visible: !isMinimap
+            width: 10
+            radius: width
+            height: listView.visibleArea.heightRatio * listView.height
+            anchors.right: listView.right
+            opacity: (listView.showBars || ma.containsMouse || ma.drag.active) ? 0.5 : 0.0
+
+            onYChanged: {
+                if (ma.drag.active) {
+                    listView.contentY = y*(listView.contentHeight-listView.height)/(listView.height-height);
+                }
+            }
+
+            states: [
+                State {
+                    when: !ma.drag.active
+                    PropertyChanges {
+                        target: verticalScrollBar
+                        y: listView.visibleArea.yPosition*listView.height
+                    }
+                }
+            ]
+
+            Behavior on opacity { PropertyAnimation {} }
+        }
+
+        MouseArea {
+            id: ma
+            enabled: true
+            width: verticalScrollBar.width
+            height: listView.height
+            anchors.right: parent.right
+            hoverEnabled: true
+            drag.target: verticalScrollBar
+            drag.minimumY: 0
+            drag.maximumY: listView.height-verticalScrollBar.height
+        }
+    }
+
+    Repeater {
+        id: highlightedLines
+        model: getCurrentSelection() ? getCurrentSelection().len() : 0
+
+        delegate: Rectangle {
+            property var rowcol
+            property var cursor: children[0]
+
+            color: "#aaaa2288"
+            radius: 2
+            border.color: "#1c1c1c"
+            height: cursor.height
+            y: getYPosition(rowcol)
+            z: listView.z-1
+
+            function getYPosition(rowCol) {
+                if(rowCol) {
+                    return rowcol[0] * (listView.contentHeight/listView.count) - listView.contentY;
+                }
+                return 0;
+            }
+
+            Text {
+                color: "#F8F8F0"
+                font.family: editorRoot.fontFace
+                font.pointSize: editorRoot.fontSize
+            }
+        }
+    }
+
+    function onSelectionModified() {
+        if (myView == undefined) return;
+
+        var selection = getCurrentSelection(),
+            backend = myView.back(),
+            buf = backend.buffer(),
+            of = 0; // todo: rename 'of' to something more descriptive
+
+        highlightedLines.model = myView.regionLines();
+
+        for(var i = 0; i < selection.len(); i++) {
+            var rect = highlightedLines.itemAt(i),
+                s = selection.get(i);
+
+            if (!s || !rect) continue;
+
+            var rowcol,
+                lns = getLinesFromSelection(s, buf);
+
+            // checks if we moved cursor forward or backward
+            if (s.b <= s.a) lns.reverse();
+            for(var j = 0; j < lns.length; j++) {
+                var nrect = highlightedLines.itemAt(i+of);
+                of++;
+                if (nrect === null) {
+                  continue;
+                }
+                rect = nrect;
+                rowcol = buf.rowCol(lns[j].a);
+                // rect.rowcol = rowcol;
+                try {
+                  rect.rowcol = rowcol;
+                }
+                catch (e) {
+                  console.log("rowcol: ", rowcol, i, of, rect);
+                }
+                rect.x = getCursorOffset(lns[j].a, rowcol, rect.cursor, buf);
+                rowcol = buf.rowCol(lns[j].b);
+                rect.width = getCursorOffset(lns[j].b, rowcol, rect.cursor, buf) - rect.x;
+            }
+            of--;
+
+            rect.cursor.x = (s.b <= s.a) ? 0 : rect.width;
+            rect.cursor.opacity = 1;
+
+            var caretStyle = myView.setting("caret_style"),
+                inverseCaretState = myView.setting("inverse_caret_state");
+
+            if (caretStyle == "underscore") {
+                if (inverseCaretState) {
+                    rect.cursor.text = "_";
+                    if (rect.width != 0)
+                        rect.cursor.x -= rect.cursor.width;
+                } else {
+                    rect.cursor.text = "|";
+                    // Shift the cursor to the edge of the character
+                    rect.cursor.x -= 4;
+                }
+            }
+        }
+        // Clearing
+        for(var i = of + selection.len()+1; i < highlightedLines.count; i++) {
+            var rect = highlightedLines.itemAt(i);
+            if (!rect) continue;
+            rect.width = 0;
+        }
+    }
+
+    // getCursorOffset returns the x coordinate for the cursor.
+    function getCursorOffset(cursorIndex, rowcol, cursor, buf) {
+
+        var line = buf.line(cursorIndex),
+            currentLineText  = buf.substr(line);
+
+        // text from the beginning of the line to the given column
+        var textToCursor = currentLineText.substr(0, rowcol[1]);
+
+        var cursorOffset = fontMetrics.advanceWidth(textToCursor);
+
+        // cursor.textFormat = TextEdit.RichText;
+        // cursor.text = "<span style=\"white-space:pre\">" + textToCursor + "</span>";
+        //
+        // var cursorOffset = cursor.width;
+        //
+        // cursor.textFormat = TextEdit.PlainText;
+        // cursor.text = "";
+
+        return (!cursorOffset) ? 0 : cursorOffset;
+    }
+
+    // getLinesFromSelection returns an array of lines from the given
+    // selection and buffer. Works like buffer.Lines()
+    //
+    // note: the selection could be inverted, for example if a user starts
+    // selecting from the bottom up. This makes sure that the start of
+    // the selection is where the user stopped selecting.
+    function getLinesFromSelection(selection, buf) {
+        var lines = [];
+
+        var safeSelection = (selection.b > selection.a) ?
+                    { a: selection.a, b: selection.b }:
+                    { a: selection.b, b: selection.a };
+
+        var rowCol = {
+            a: buf.rowCol(safeSelection.a),
+            b: buf.rowCol(safeSelection.b)
+        };
+
+        for(var i = rowCol.a[0]; i <= rowCol.b[0]; i++) {
+            var lr = buf.line(buf.textPoint(i, 0)),
+                a = (i == rowCol.a[0]) ? safeSelection.a : lr.a,
+                b = (i == rowCol.b[0]) ? safeSelection.b : lr.b,
+                res = (b > a) ? {a: a, b: b} : {a: b, b: a};
+            lines.push(res);
+        }
+
+        return lines;
+    }
+
+    Timer {
+        interval: 100
+        repeat: true
+        running: true
+        onTriggered: {
+            var o = 0.5 + 0.5 * Math.sin(Date.now()*0.008);
+
+            for (var i = 0; i < highlightedLines.count; i++) {
+                var rect =  highlightedLines.itemAt(i);
+                rect.cursor.opacity = o;
+            }
+        }
+    }
+}

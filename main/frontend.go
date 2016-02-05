@@ -160,6 +160,10 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 	w2 := t.windows[v.Window()]
 	w2.views = append(w2.views, fv)
 
+	if w2.window == nil {
+		return
+	}
+
 	tabs := w2.window.ObjectByName("tabs")
 	tab := tabs.Call("addTab", "", limeViewComponent).(qml.Object)
 	try_now := func() {
@@ -389,12 +393,18 @@ func (t *qmlfrontend) loop() (err error) {
 	defer watch.RemoveWatch(".")
 
 	reloadRequested := false
+	waiting := false
 
 	go func() {
+		// reloadRequested = true
+		// t.Quit()
+
 		for {
+			time.Sleep(1 * time.Second) // quitting too frequently causes crashes
+
 			select {
 			case ev := <-watch.Event:
-				if ev != nil && strings.HasSuffix(ev.Name, ".qml") && ev.IsModify() && !ev.IsAttrib() {
+				if ev != nil && strings.HasSuffix(ev.Name, ".qml") && ev.IsModify() && !ev.IsAttrib() && !reloadRequested && waiting {
 					reloadRequested = true
 					t.Quit()
 				}
@@ -409,7 +419,9 @@ func (t *qmlfrontend) loop() (err error) {
 		log.Debug("Waiting for all windows to close")
 		// wg would be the WaitGroup all windows belong to, so first we wait for
 		// all windows to close.
+		waiting = true
 		wg.Wait()
+		waiting = false
 		log.Debug("All windows closed. reloadRequest: %v", reloadRequested)
 		// then we check if there's a reload request in the pipe
 		if !reloadRequested || len(t.windows) == 0 {
@@ -441,6 +453,13 @@ func (t *qmlfrontend) loop() (err error) {
 		// Succeeded loading the file, re-launch all windows
 		for _, v := range t.windows {
 			v.launch(&wg, component)
+
+			for i, bv := range v.Back().Views() {
+				t.onNew(bv)
+				t.onLoad(bv)
+
+				v.View(i)
+			}
 		}
 	}
 
