@@ -292,6 +292,8 @@ ApplicationWindow {
                         oldView = realView;
                     }
                     function percentage(view) {
+                        if (!view)
+                            return;
                         return view.visibleArea.yPosition/(1-view.visibleArea.heightRatio);
                     }
                     id: minimap
