@@ -296,7 +296,6 @@ func (t *qmlfrontend) loop() (err error) {
 	t.Console = &frontendView{bv: c}
 	c.Buffer().AddObserver(t.Console)
 	c.Buffer().AddObserver(t)
-	go ed.Init()
 
 	var (
 		engine    *qml.Engine
@@ -353,15 +352,19 @@ func (t *qmlfrontend) loop() (err error) {
 		scheme = sc
 	}
 
+	// TODO: setting syntax should be done automaticly in backend and after
+	// implementing this we could run Init in a go routine and remove the
+	// next two line
+	ed.Init()
+	v := ed.ActiveWindow().OpenFile("main.go", 0)
+	v.SetSyntaxFile("../packages/go.tmbundle/Syntaxes/Go.tmLanguage")
+
 	defer func() {
 		fmt.Println(util.Prof)
 	}()
 
-	w := ed.NewWindow()
-	v := w.OpenFile("main.go", 0)
-	// TODO: should be done backend side
-	v.SetSyntaxFile("../packages/go.tmbundle/Syntaxes/Go.tmLanguage")
-
+	// The rest of code is related to livereloading qml files
+	// TODO: this doesnt work currently
 	watch, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Error("Unable to create file watcher: %s", err)
@@ -426,5 +429,6 @@ func (t *qmlfrontend) loop() (err error) {
 			v.launch(&wg, component)
 		}
 	}
+
 	return
 }
