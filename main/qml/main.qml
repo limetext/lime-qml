@@ -14,6 +14,7 @@ ApplicationWindow {
     title: "Lime"
 
     property var myWindow
+    property string themeFolder: "../../packages/Soda/Soda Dark"
 
     function view() {
       var tab = tabs.getTab(tabs.currentIndex);
@@ -148,7 +149,7 @@ ApplicationWindow {
         id: statusBar
         style: StatusBarStyle {
             background: Image {
-               source: "../packages/Soda/Soda Dark/status-bar-background.png"
+              source: themeFolder + "/status-bar-background.png"
             }
         }
 
@@ -231,7 +232,7 @@ ApplicationWindow {
                             }
                         }
                         BorderImage {
-                            source: styleData.selected ? "../packages/themes/soda/Soda Dark/tab-active.png" : "../packages/themes/soda/Soda Dark/tab-inactive.png"
+                            source: themeFolder + (styleData.selected ? "/tab-active.png" : "/tab-inactive.png")
                             border { left: 5; top: 5; right: 5; bottom: 5 }
                             width: 180
                             height: 25
@@ -246,7 +247,7 @@ ApplicationWindow {
                     }
                     tabBar: Image {
                         fillMode: Image.TileHorizontally
-                        source: "../packages/themes/soda/Soda Dark/tabset-background.png"
+                        source: themeFolder + "/tabset-background.png"
                     }
                     tabsMovable: true
                     frame: Rectangle { color: frontend.defaultBg() }

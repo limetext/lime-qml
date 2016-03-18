@@ -32,8 +32,8 @@ var (
 
 const (
 	batching_enabled = true
-	qmlMainFile      = "main.qml"
-	qmlViewFile      = "LimeView.qml"
+	qmlMainFile      = "qml/main.qml"
+	qmlViewFile      = "qml/LimeView.qml"
 
 	// http://qt-project.org/doc/qt-5.1/qtcore/qt.html#KeyboardModifier-enum
 	shift_mod  = 0x02000000
@@ -389,8 +389,8 @@ func (t *qmlfrontend) loop() (err error) {
 		return
 	}
 	defer watch.Close()
-	watch.Watch(".")
-	defer watch.RemoveWatch(".")
+	watch.Watch("qml")
+	defer watch.RemoveWatch("qml")
 
 	reloadRequested := false
 	waiting := false
