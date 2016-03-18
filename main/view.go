@@ -52,6 +52,7 @@ type lineChunk struct {
 	Text       string
 	Background string
 	Foreground string
+	SkipWidth  int
 	Width      int
 	Measured   bool
 }

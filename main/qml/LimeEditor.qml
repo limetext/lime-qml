@@ -30,6 +30,14 @@ Item {
       font.pointSize: editorRoot.fontSize
     }
 
+    property var editorFont: editorRoot.fontSize + "pt \"" + editorRoot.fontFace + "\""
+    property var spaceWidth: 25
+    property var tabWidth: spaceWidth * 4
+
+    onEditorFontChanged: {
+      editorRoot.spaceWidth = fontMetrics.advanceWidth(' ');
+    }
+
 
     ListView {
         id: listView
@@ -47,7 +55,7 @@ Item {
         delegate:
           Canvas {
             id: canvas
-            property var line: !myView ? null : myView.line(index)
+            property var line: myView && index > -1 ? myView.line(index) : null
             property var lineText: !line ? null : line.text
 
             onLineTextChanged: {
@@ -61,16 +69,39 @@ Item {
             width: parent.width
             height: fontMetrics.lineSpacing
 
-            onPaint: {
-              if (line == null) return;
-              var l = line;
+            function measureChunk(chunk) {
+              var ctext = chunk.text;
+              var ctlen = ctext.length;
+              var j = 0;
 
-              var spaceWidth = fontMetrics.advanceWidth(' ');
-              var tabWidth = spaceWidth * 4;
+              var skipWidth = 0;
+              var tabWidth = editorRoot.tabWidth;
+
+              // TODO: Are tabs always at the beginning of the chunk?
+              while (j < ctlen && ctext[j] === '\t') {
+                j++;
+                skipWidth += tabWidth;
+              }
+
+              ctext = ctext.slice(j);
+              var cwidth = fontMetrics.advanceWidth(ctext);
+
+              chunk.skipWidth = skipWidth;
+              chunk.width = cwidth;
+            }
+
+            onPaint: {
+              var l = line;
+              if (l == null) return;
+
+              // var spaceWidth = editorRoot.spaceWidth;
+              var tabWidth = editorRoot.tabWidth;
+              // var spaceWidth = fontMetrics.advanceWidth(' ');
+              // var tabWidth = spaceWidth * 4;
 
               var ctx = canvas.getContext("2d");
 
-              ctx.font = editorRoot.fontSize + "pt \"" + editorRoot.fontFace + "\"";
+              ctx.font = editorFont;
 
               var defaultColor = "#ffffff";
               var currentColor = defaultColor;
@@ -81,6 +112,7 @@ Item {
               var len = l.chunksLen();
               var x = 0;
               var y = fontMetrics.ascent;
+              var yval = y - fontMetrics.strikeOutPosition;
               for (var i = 0; i < len; i++) {
                 var c = l.chunk(i);
 
@@ -91,6 +123,13 @@ Item {
                   if (currentColor !== c.foreground)
                     ctx.fillStyle =  '#' + (currentColor = c.foreground);
                 }
+
+                if (!c.measured) {
+                  measureChunk(c)
+                }
+
+                // ctx.fillRect(x, 0, 1, canvas.height); // Chunk left border
+
                 var ctext = c.text;
                 var ctlen = ctext.length;
                 var j = 0;
@@ -98,17 +137,18 @@ Item {
                 // TODO: Are tabs always at the beginning of the chunk?
                 while (j < ctlen && ctext[j] === '\t') {
                   j++;
-                  var yval = y - fontMetrics.strikeOutPosition;
                   ctx.fillRect(x+2, yval, tabWidth-4, 1);
                   x += tabWidth;
                 }
 
                 ctext = ctext.slice(j);
-                var cwidth = fontMetrics.advanceWidth(ctext);
+                // var cwidth = fontMetrics.advanceWidth(ctext);
 
                 ctx.fillText(ctext, x, y);
-                x += cwidth;
+                x += c.width;
               }
+
+              l.width = x;
             }
           }
 
@@ -146,68 +186,74 @@ Item {
 
                 const printDebug = false;
 
-                var line = myView.back().buffer().line(myView.back().buffer().textPoint(lineIndex, 0)),
-                    lineText = myView.back().buffer().substr(line);
+                var line = myView.line(lineIndex);
+                var lineText = line.rawText;
 
-                if (printDebug) console.log("Raw line: ", myView.line(lineIndex).text);
+                // var line = myView.back().buffer().line(myView.back().buffer().textPoint(lineIndex, 0));
+                // var lineText = myView.back().buffer().substr(line);
 
-                if (printDebug) console.log("Line: ", JSON.stringify(lineText), lineText.length);
-                if (printDebug) console.log("mouseX: ", mouseX);
+                // if (printDebug) console.log("Raw line: ", myView.line(lineIndex).text);
 
-                // dummy.text = lineText;
-                // console.log("Dummy width: ", dummy.width);
+                // if (printDebug) console.log("Line: ", JSON.stringify(lineText), lineText.length);
+                // if (printDebug) console.log("mouseX: ", mouseX);
 
-                // var context = measure.getContext("2d");
-                // context.font = editorRoot.fontSize + "pt " + editorRoot.fontFace;
+                // var fullWidth = fontMetrics.advanceWidth(lineText);
+                var fullWidth = line.width;
+                // if (printDebug) console.log("Line width: ", JSON.stringify(fullWidth));
 
-                // var fullWidth = context.measureText(lineText).width;
-                var fullWidth = fontMetrics.advanceWidth(lineText);
-                if (printDebug) console.log("Line width: ", JSON.stringify(fullWidth));
-
-                // testRect.width = fullWidth;
 
                 // if the click was farther right than the last character of
                 // the line then return the last character's column
                 if(mouseX > fullWidth) {
-                  if (printDebug) console.log("bigwidth: ", myView.back().buffer().rowCol(line.b)[1], ", ", lineText.length);
+                  // if (printDebug) console.log("bigwidth: ", myView.back().buffer().rowCol(line.b)[1], ", ", lineText.length);
                   return lineText.length; //myView.back().buffer().rowCol(line.b)[1]
                 }
 
                 // fixme: why do we need this magic number? because of floor instead of round
-                var OFFSET_MAGIC_NUMBER = 0.5;
+                // const OFFSET_MAGIC_NUMBER = 0.5;
 
                 // calculate a column from a given mouse x coordinate and the line text.
-                var col = Math.floor(OFFSET_MAGIC_NUMBER + lineText.length * (mouseX / fullWidth));
-                if (col < 0) col = 0;
+                var col; // = Math.round(lineText.length * (mouseX / fullWidth));
+                //if (col < 0) col = 0;
 
                 // Trying to find closest column to clicked position
-                // dummy.text = "<span style=\"white-space:pre\">" + lineText.substr(0, col) + "</span>";
-                // var partialWidth = context.measureText(lineText.substr(0, col)).width;
-                var partialWidth = fontMetrics.advanceWidth(lineText.substr(0, col));
-                if (printDebug) console.log("partialWidth: ", partialWidth);
+                var len = line.chunksLen();
+                var ci = 0;
+                var partialWidth = 0;
+                var partialCol = 0;
+                var chunk;
+                while (ci < len) {
+                  chunk = line.chunk(ci);
+                  var afterX = partialWidth + chunk.skipWidth + chunk.width;
 
-                var d = Math.abs(mouseX - partialWidth);
-                var add = (mouseX > partialWidth) ? 1 : -1;
-                if (printDebug) console.log("add: ", add);
+                  if (mouseX < afterX)
+                    break;
 
-                var prevWidth = partialWidth;
-                var oldcol = col;
-                while (col >= 0 && col < lineText.length && Math.abs(mouseX - partialWidth) <= d) {
-                    d = Math.abs(mouseX - partialWidth);
-                    col += add;
-                    prevWidth = partialWidth;
-                    // partialWidth = context.measureText(lineText.substr(0, col)).width;
-                    partialWidth = fontMetrics.advanceWidth(lineText.substr(0, col));
-                    // dummy.text = "<span style=\"white-space:pre\">" + lineText.substr(0, col) + "</span>";
+                  partialWidth = afterX;
+                  partialCol += chunk.text.length;
+                  ci += 1;
                 }
-                if (printDebug) console.log("widths: ", prevWidth, partialWidth);
-                if (printDebug) console.log("diffs: ", Math.abs(mouseX - prevWidth), Math.abs(mouseX - partialWidth), d);
-                // if (Math.abs(mouseX - prevWidth) < d) {
-                  // col -= add;
-                // }
-                // else console.log("nope");
 
-                col -= add;
+                var chunkX = mouseX - partialWidth;
+                if (chunkX < chunk.skipWidth) {
+                  col = partialCol + Math.round(chunkX / tabWidth);
+                }
+                else {
+                  partialWidth += chunk.skipWidth;
+                  chunkX -= chunk.skipWidth;
+
+                  var ctext = chunk.text;
+
+                  // console.log("clickedChunk: ", JSON.stringify(ctext), chunkX, chunk.width);
+
+                  var j = 0;
+                  while (j < ctext.length && ctext[j] == '\t') j++;
+
+                  ctext = ctext.slice(j);
+
+                  col = partialCol + j + Math.round(ctext.length * (chunkX / chunk.width));
+
+                }
 
                 if (col > lineText.length) col = lineText.length;
 
@@ -246,23 +292,21 @@ Item {
             onPressed: {
                 // TODO:
                 // Changing caret position doesn't work on empty lines
-                // if (!isMinimap) {
 
-                    var item  = listView.itemAt(0, mouse.y+listView.contentY),
-                        index = listView.indexAt(0, mouse.y+listView.contentY);
+                  var item  = listView.itemAt(0, mouse.y+listView.contentY),
+                      index = listView.indexAt(0, mouse.y+listView.contentY);
 
-                    if (item != null) {
-                        var col = colFromMouseX(index, mouse.x);
-                        point.p = myView.back().buffer().textPoint(index, col)
+                  if (item != null) {
+                      var col = colFromMouseX(index, mouse.x);
+                      point.p = myView.back().buffer().textPoint(index, col)
 
-                        if (!ctrl) {
-                            getCurrentSelection().clear();
-                        }
+                      if (!ctrl) {
+                          getCurrentSelection().clear();
+                      }
 
-                        getCurrentSelection().add(myView.region(point.p, point.p))
-                        onSelectionModified();
-                    }
-                // }
+                      getCurrentSelection().add(myView.region(point.p, point.p))
+                      onSelectionModified();
+                  }
             }
 
             onDoubleClicked: {
@@ -309,7 +353,7 @@ Item {
             radius: width
             height: listView.visibleArea.heightRatio * listView.height
             anchors.right: listView.right
-            opacity: (listView.showBars || ma.containsMouse || ma.drag.active) ? 0.5 : 0.0
+            opacity: (listView.showBars || ma.containsMouse || ma.drag.active) ? 0.5 : 0.05
 
             onYChanged: {
                 if (ma.drag.active) {
@@ -443,24 +487,49 @@ Item {
 
     // getCursorOffset returns the x coordinate for the cursor.
     function getCursorOffset(cursorIndex, rowcol, cursor, buf) {
+        var line = myView.line(rowcol[0]);
 
-        var line = buf.line(cursorIndex),
-            currentLineText  = buf.substr(line);
+        var len = line.chunksLen();
+        if (len == 0) return 0;
+        var partialWidth = 0;
+        var partialCol = 0;
+        var ci = 0;
+        var chunk;
+        while (ci < len) {
+          chunk = line.chunk(ci);
+          var totalCol = partialCol + chunk.text.length;
+          if (totalCol > rowcol[1])
+            break;
 
-        // text from the beginning of the line to the given column
-        var textToCursor = currentLineText.substr(0, rowcol[1]);
+          partialCol = totalCol;
+          partialWidth += chunk.skipWidth + chunk.width;
+          ci ++;
+        }
+
+        var chunkCol = rowcol[1] - partialCol;
+
+        var ctext = chunk.text;
+
+        // console.log("lineChar: ", line.rawText[rowcol[1]], " chunkChar: ", ctext[chunkCol]);
+
+        var j = 0;
+        var tlen = ctext.length;
+        while (j < tlen) {
+          if (j == chunkCol) {
+            return partialWidth;
+          }
+          if (ctext[j] != '\t') break;
+          partialWidth += tabWidth;
+          j++;
+        }
+
+        // j is now the start of non-tab characters in the chunk
+        var textToCursor = ctext.slice(j, chunkCol);
 
         var cursorOffset = fontMetrics.advanceWidth(textToCursor);
 
-        // cursor.textFormat = TextEdit.RichText;
-        // cursor.text = "<span style=\"white-space:pre\">" + textToCursor + "</span>";
-        //
-        // var cursorOffset = cursor.width;
-        //
-        // cursor.textFormat = TextEdit.PlainText;
-        // cursor.text = "";
+        return partialWidth + cursorOffset;
 
-        return (!cursorOffset) ? 0 : cursorOffset;
     }
 
     // getLinesFromSelection returns an array of lines from the given
