@@ -170,7 +170,7 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 			return
 		}
 		item.Set("myView", fv)
-		item.Set("fontSize", float64(v.Settings().Get("font_size", 12).(int)))
+		item.Set("fontSize", float64(12))
 		item.Set("fontFace", v.Settings().Get("font_face", "Helvetica").(string))
 	}
 	tab.On("loaded", try_now)
@@ -297,6 +297,10 @@ func (t *qmlfrontend) loop() (err error) {
 	c.Buffer().AddObserver(t.Console)
 	c.Buffer().AddObserver(t)
 
+	ed.AddPackagesPath("shipped", "../packages")
+	ed.AddPackagesPath("default", "../packages/Default")
+	ed.AddPackagesPath("user", "../packages/User")
+
 	var (
 		engine    *qml.Engine
 		component qml.Object
@@ -346,18 +350,19 @@ func (t *qmlfrontend) loop() (err error) {
 	})
 
 	// TODO: should be done backend side
-	if sc, err := textmate.LoadTheme("../packages/themes/TextMate-Themes/Monokai.tmTheme"); err != nil {
+	if sc, err := textmate.LoadTheme("../packages/TextMate-Themes/Monokai.tmTheme"); err != nil {
 		log.Error(err)
 	} else {
 		scheme = sc
 	}
 
+	ed.Init()
+
 	// TODO: setting syntax should be done automaticly in backend and after
 	// implementing this we could run Init in a go routine and remove the
 	// next two line
-	ed.Init()
 	v := ed.ActiveWindow().OpenFile("main.go", 0)
-	v.SetSyntaxFile("../packages/go.tmbundle/Syntaxes/Go.tmLanguage")
+	v.SetSyntaxFile("../packages/go-tmbundle/Syntaxes/Go.tmLanguage")
 
 	defer func() {
 		fmt.Println(util.Prof)
