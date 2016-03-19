@@ -5,6 +5,7 @@
 package main
 
 import (
+	"flag"
 	"runtime"
 
 	"gopkg.in/qml.v1"
@@ -20,13 +21,19 @@ const (
 	render_chan_len = 2
 )
 
-var t *qmlfrontend
+var (
+	t *qmlfrontend
+
+	rotateLog = flag.Bool("rotateLog", false, "Rotate debug log")
+)
 
 func main() {
+	flag.Parse()
+
 	// Need to lock the OS thread as OSX GUI requires GUI stuff to run in the main thread
 	runtime.LockOSThread()
 
-	log.AddFilter("file", log.DEBUG, log.NewConsoleLogWriter())
+	log.AddFilter("file", log.FINEST, log.NewFileLogWriter("debug.log", *rotateLog))
 	defer func() {
 		py.NewLock()
 		py.Finalize()
