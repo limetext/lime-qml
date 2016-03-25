@@ -46,7 +46,7 @@ Item {
         model: ListModel {}
         anchors.fill: parent
         boundsBehavior: Flickable.StopAtBounds
-        cacheBuffer: contentHeight
+        cacheBuffer: (contentHeight > 0) ? contentHeight : 0
         interactive: false
         clip: true
         z: 4

@@ -170,7 +170,16 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 			return
 		}
 		item.Set("myView", fv)
-		item.Set("fontSize", v.Settings().Get("font_size", 12).(float64))
+		// TODO: v.Settings().Get("font_size", 12)
+		// is sometimes returning int sometimes float64
+		var fSize float64
+		fz := v.Settings().Get("font_size", 12)
+		if tmp, ok := fz.(int); ok {
+			fSize = float64(tmp)
+		} else if tmp1, ok := fz.(float64); ok {
+			fSize = tmp1
+		}
+		item.Set("fontSize", fSize)
 		item.Set("fontFace", v.Settings().Get("font_face", "Helvetica").(string))
 	}
 	tab.On("loaded", try_now)
@@ -296,7 +305,10 @@ func (t *qmlfrontend) loop() (err error) {
 	t.Console = &frontendView{bv: c}
 	c.Buffer().AddObserver(t.Console)
 	c.Buffer().AddObserver(t)
-	go ed.Init()
+
+	ed.AddPackagesPath("shipped", "../packages")
+	ed.AddPackagesPath("default", "../packages/Default")
+	ed.AddPackagesPath("user", "../packages/User")
 
 	var (
 		engine    *qml.Engine
@@ -347,21 +359,26 @@ func (t *qmlfrontend) loop() (err error) {
 	})
 
 	// TODO: should be done backend side
-	if sc, err := textmate.LoadTheme("../packages/themes/TextMate-Themes/Monokai.tmTheme"); err != nil {
+	if sc, err := textmate.LoadTheme("../packages/TextMate-Themes/Monokai.tmTheme"); err != nil {
 		log.Error(err)
 	} else {
 		scheme = sc
 	}
 
+	ed.Init()
+
+	// TODO: setting syntax should be done automaticly in backend and after
+	// implementing this we could run Init in a go routine and remove the
+	// next two line
+	v := ed.ActiveWindow().OpenFile("main.go", 0)
+	v.SetSyntaxFile("../packages/go-tmbundle/Syntaxes/Go.tmLanguage")
+
 	defer func() {
 		fmt.Println(util.Prof)
 	}()
 
-	w := ed.NewWindow()
-	v := w.OpenFile("main.go", 0)
-	// TODO: should be done backend side
-	v.SetSyntaxFile("../packages/go.tmbundle/Syntaxes/Go.tmLanguage")
-
+	// The rest of code is related to livereloading qml files
+	// TODO: this doesnt work currently
 	watch, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Error("Unable to create file watcher: %s", err)
@@ -426,5 +443,6 @@ func (t *qmlfrontend) loop() (err error) {
 			v.launch(&wg, component)
 		}
 	}
+
 	return
 }
