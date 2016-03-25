@@ -170,7 +170,16 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 			return
 		}
 		item.Set("myView", fv)
-		item.Set("fontSize", float64(12))
+		// TODO: v.Settings().Get("font_size", 12)
+		// is sometimes returning int sometimes float64
+		var fSize float64
+		fz := v.Settings().Get("font_size", 12)
+		if tmp, ok := fz.(int); ok {
+			fSize = float64(tmp)
+		} else if tmp1, ok := fz.(float64); ok {
+			fSize = tmp1
+		}
+		item.Set("fontSize", fSize)
 		item.Set("fontFace", v.Settings().Get("font_face", "Helvetica").(string))
 	}
 	tab.On("loaded", try_now)
