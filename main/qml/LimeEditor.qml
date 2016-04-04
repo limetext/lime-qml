@@ -13,16 +13,12 @@ Item {
     property bool ctrl: false
 
     function getCurrentSelection() {
-        if (!myView || !myView.back()) return null;
+        if (!myView || !myView.back()) {
+          console.log("returning null selection", myView, myView? myView.back() : false);
+          return null;
+        }
         return myView.back().sel();
     }
-
-
-
-    // onFontSizeChanged: {
-    //     dummy.font.pointSize = fontSize;
-    // }
-
 
     FontMetrics {
       id: fontMetrics
@@ -33,9 +29,33 @@ Item {
     property var editorFont: editorRoot.fontSize + "pt \"" + editorRoot.fontFace + "\""
     property var spaceWidth: 25
     property var tabWidth: spaceWidth * 4
+    property var lineHeight: fontMetrics.lineSpacing
 
     onEditorFontChanged: {
       editorRoot.spaceWidth = fontMetrics.advanceWidth(' ');
+    }
+
+
+    function measureChunk(chunk) {
+      var ctext = chunk.text;
+      var ctlen = ctext.length;
+      var j = 0;
+
+      var skipWidth = 0;
+      var tabWidth = editorRoot.tabWidth;
+
+      // TODO: Are tabs always at the beginning of the chunk?
+      while (j < ctlen && ctext[j] === '\t') {
+        j++;
+        skipWidth += tabWidth;
+      }
+
+      ctext = ctext.slice(j);
+      var cwidth = fontMetrics.advanceWidth(ctext);
+
+      chunk.skipWidth = skipWidth;
+      chunk.width = cwidth;
+      chunk.measured = true;
     }
 
 
@@ -60,6 +80,7 @@ Item {
 
             onLineTextChanged: {
               requestPaint();
+              // onSelectionModified();
             }
 
             // TODO: why doesn't this work?
@@ -67,28 +88,8 @@ Item {
             // property var tabWidth: spaceWidth * 4
 
             width: parent.width
-            height: fontMetrics.lineSpacing
+            height: lineHeight
 
-            function measureChunk(chunk) {
-              var ctext = chunk.text;
-              var ctlen = ctext.length;
-              var j = 0;
-
-              var skipWidth = 0;
-              var tabWidth = editorRoot.tabWidth;
-
-              // TODO: Are tabs always at the beginning of the chunk?
-              while (j < ctlen && ctext[j] === '\t') {
-                j++;
-                skipWidth += tabWidth;
-              }
-
-              ctext = ctext.slice(j);
-              var cwidth = fontMetrics.advanceWidth(ctext);
-
-              chunk.skipWidth = skipWidth;
-              chunk.width = cwidth;
-            }
 
             onPaint: {
               var l = line;
@@ -294,39 +295,41 @@ Item {
                 // Changing caret position doesn't work on empty lines
 
                   var item  = listView.itemAt(0, mouse.y+listView.contentY),
-                      index = listView.indexAt(0, mouse.y+listView.contentY);
+                      index = listView.indexAt(0, mouse.y+listView.contentY),
+                      selection = getCurrentSelection();
 
                   if (item != null) {
                       var col = colFromMouseX(index, mouse.x);
                       point.p = myView.back().buffer().textPoint(index, col)
 
                       if (!ctrl) {
-                          getCurrentSelection().clear();
+                          selection.clear();
                       }
 
-                      getCurrentSelection().add(myView.region(point.p, point.p))
+                      selection.add(myView.region(point.p, point.p));
+                      // if (ctrl) {
+                      //   console.log("Added empty: ", getCurrentSelection(), selection.len(), selection.get(0), selection.get(1));
+                      // }
                       onSelectionModified();
                   }
             }
 
             onDoubleClicked: {
-                // if (!isMinimap) {
 
-                    var item  = listView.itemAt(0, mouse.y+listView.contentY),
-                        index = listView.indexAt(0, mouse.y+listView.contentY);
+                var item  = listView.itemAt(0, mouse.y+listView.contentY),
+                    index = listView.indexAt(0, mouse.y+listView.contentY);
 
-                    if (item != null) {
-                        var col = colFromMouseX(index, mouse.x);
-                        point.p = myView.back().buffer().textPoint(index, col)
+                if (item != null) {
+                    var col = colFromMouseX(index, mouse.x);
+                    point.p = myView.back().buffer().textPoint(index, col)
 
-                        if (!ctrl) {
-                            getCurrentSelection().clear();
-                        }
-
-                        getCurrentSelection().add(myView.back().expandByClass(myView.region(point.p, point.p), 1|2|4|8))
-                        onSelectionModified();
+                    if (!ctrl) {
+                        getCurrentSelection().clear();
                     }
-                // }
+
+                    getCurrentSelection().add(myView.back().expandByClass(myView.region(point.p, point.p), 1|2|4|8))
+                    onSelectionModified();
+                }
             }
 
             onWheel: {
@@ -387,37 +390,243 @@ Item {
         }
     }
 
-    Repeater {
+    Flickable  {
+      anchors.fill: parent
+      contentY: listView.contentY
+      interactive: false
+
+      Repeater {
         id: highlightedLines
-        model: getCurrentSelection() ? getCurrentSelection().len() : 0
+        property var currentSelection: null
+        model: currentSelection ? currentSelection.len() : 0
 
-        delegate: Rectangle {
-            property var rowcol
-            property var cursor: children[0]
+        onCurrentSelectionChanged: {
+          // console.log("currentSelection changed", highlightedLines.model);
+          model = currentSelection ? currentSelection.len() : 0;
+          if (!currentSelection) console.log("Bad currentSelection!", currentSelection);
+        }
 
-            color: "#aaaa2288"
-            radius: 2
-            border.color: "#1c1c1c"
-            height: cursor.height
-            y: getYPosition(rowcol)
+        delegate: Component {
+          id: selComp
+          Canvas {
+            id: selCanvas
+
+            Connections {
+              target: highlightedLines
+              onCurrentSelectionChanged: updateSelection()
+            }
+            Component.onCompleted: {
+              // console.log("completed");
+              updateSelection();
+            }
+
+
+            function updateSelection() {
+              // console.log("csel", highlightedLines.currentSelection);
+              var csel = highlightedLines.currentSelection;
+              if (csel) {
+                selection = csel.get(index);
+                // console.log("cc selection changed: ", index, selection);
+              }
+              else {
+                console.log("cc bad cs ", csel);
+              }
+            }
+
+            property var selection: null
+            property var safeSelection: null
+            // property var rowcol: null
+            // property var cursor: children[0]
+            property bool isBlinking: false
+
+            // color: "#aaaa2288"
+            // radius: 2
+            // border.color: "#1c1c1c"
+            height: lineHeight
+            width: listView.width
+            y: 0 //getYPosition(rowcol)
             z: listView.z-1
+
+            property var lastSelection: null
+
+            onSelectionChanged: {
+              if (!selection) return;
+              // console.log("selection changed: ", index, selection? selection.a + " " + selection.b : selection);
+
+              if (lastSelection && lastSelection.a == selection.a && lastSelection.b == selection.b) {
+                console.log("Selection not changed");
+                return;
+              }
+
+              var buf = myView.back().buffer();
+
+              // console.log("a");
+
+              safeSelection = toSafeSelection(selection);
+              // console.log("b");
+
+              var first = buf.rowCol(safeSelection.a);
+              var last = buf.rowCol(safeSelection.b);
+
+              var firstLine = first[0];
+              var lastLine = last[0];
+
+              // console.log("c");
+
+              y = firstLine * lineHeight;
+              height = (lastLine - firstLine + 1) * lineHeight + 1;
+
+              // console.log("d");
+
+              selCanvas.requestPaint();
+              // console.log("paint requested", first, last);
+            }
 
             function getYPosition(rowCol) {
                 if(rowCol) {
-                    return rowcol[0] * (listView.contentHeight/listView.count) - listView.contentY;
+                    return rowcol[0] * lineHeight;// - listView.contentY;
                 }
                 return 0;
             }
 
-            Text {
-                color: "#F8F8F0"
-                font.family: editorRoot.fontFace
-                font.pointSize: editorRoot.fontSize
+            onPaint: {
+              // console.log("onPaint");
+                if (!selection) {
+                  console.log("Skipping paint");
+                  return;
+                }
+                var //selection = getCurrentSelection()[index],
+                    backend = myView.back(),
+                    buf = backend.buffer();
+
+                var ctx = selCanvas.getContext("2d");
+
+                ctx.clearRect(0, 0, selCanvas.width, selCanvas.height);
+
+                var outlineColor = "#ffffff";
+                var fillColor = "#888888";
+                ctx.fillStyle = outlineColor;
+
+                var first = buf.rowCol(safeSelection.a);
+                var last = buf.rowCol(safeSelection.b);
+
+                var firstLine = first[0];
+                var lastLine = last[0];
+
+                // console.log("Painting: ", first, last);
+
+                var lh = lineHeight;
+
+                var y = 0;
+
+                var lastxA = -1;
+                var lastxB = -1;
+
+                if (first[0] == last[0] && first[1] == last[1]) {
+                  var xA = getCursorOffsetNew(first, buf);
+
+
+                  var caretStyle = myView.setting("caret_style"),
+                      inverseCaretState = myView.setting("inverse_caret_state");
+
+                  if (!isBlinking) {
+                    selCanvas.opacity = Qt.binding(function() { return cursorOpacity; });
+                    isBlinking = true;
+                  }
+
+                  if (caretStyle == "underscore") {
+                    if (inverseCaretState) {
+                      ctx.fillRect(xA, lh-1, editorRoot.spaceWidth, 1);
+                    } else {
+                      ctx.fillRect(xA, 0, 1, lh);
+                    }
+                  }
+
+                  return;
+                } else {
+                  if (isBlinking) {
+                    selCanvas.opacity = 1;
+                    isBlinking = false;
+                  }
+                }
+
+                for(var i = firstLine; i <= lastLine; i++) {
+                  var lr = buf.line(buf.textPoint(i, 0));
+                  var a = (i == firstLine)? safeSelection.a : lr.a;
+                  var b  = (i == lastLine)? safeSelection.b : lr.b;
+
+                  var rowcolA = buf.rowCol(a);
+                  var rowcolB = buf.rowCol(b);
+
+                  var xA = getCursorOffsetNew(rowcolA, buf);
+                  var xB = getCursorOffsetNew(rowcolB, buf);
+                  // console.log("A", rowcolA, xA, a, lr.a, " B", rowcolB, xB, b, lr.b);
+
+                  // ctx.clearRect(0, y, selCanvas.width, lh+1);
+
+                  ctx.fillStyle = fillColor;
+                  ctx.fillRect(xA+1, y, xB-xA-1, lh+1);
+
+                  ctx.fillStyle = outlineColor;
+                  ctx.fillRect(xA, y+1, 1, lh-1);
+                  ctx.fillRect(xB, y+1, 1, lh-1);
+
+                  if (i == firstLine) {
+                    ctx.fillRect(xA+1, y, xB - xA-1, 1);
+                  } else {
+                    ctx.fillRect(Math.min(xA, lastxA)+1, y, Math.abs(lastxA - xA)-1, 1);
+                    ctx.fillRect(Math.min(xB, lastxB)+1, y, Math.abs(lastxB - xB)-1, 1);
+                  }
+
+                  y += lh;
+
+                  if (i == lastLine) {
+                    ctx.fillRect(xA+1, y, xB - xA-1, 1);
+                  }
+
+                  lastxA = xA;
+                  lastxB = xB;
+                }
+
+              }
             }
+
+            // Text {
+            //     color: "#F8F8F0"
+            //     font.family: editorRoot.fontFace
+            //     font.pointSize: editorRoot.fontSize
+            // }
         }
+    }
+  }
+
+    function toSafeSelection(selection, buf) {
+      // var rowColA, rowColB;
+
+      // if (buf) {
+      //   rowColA = buf.rowCol(selection.a);
+      //   rowColB = buf.rowCol(selection.b);
+      // }
+
+      return (selection.b > selection.a) ?
+                  { a: selection.a, b: selection.b, reversed: false }:
+                  { a: selection.b, b: selection.a, reversed: true };
     }
 
     function onSelectionModified() {
+      // if (myView == undefined) return;
+
+      // var selection = getCurrentSelection(),
+      //     backend = myView.back(),
+      //     buf = backend.buffer(),
+      //     of = 0; // todo: rename 'of' to something more descriptive
+
+      highlightedLines.currentSelection = getCurrentSelection();
+
+      // console.log("SelectionModified", highlightedLines.currentSelection);
+    }
+
+    function onSelectionModifiedOld() {
         if (myView == undefined) return;
 
         var selection = getCurrentSelection(),
@@ -486,7 +695,7 @@ Item {
     }
 
     // getCursorOffset returns the x coordinate for the cursor.
-    function getCursorOffset(cursorIndex, rowcol, cursor, buf) {
+    function getCursorOffsetNew(rowcol, buf) {
         var line = myView.line(rowcol[0]);
 
         var len = line.chunksLen();
@@ -497,6 +706,11 @@ Item {
         var chunk;
         while (ci < len) {
           chunk = line.chunk(ci);
+          if (chunk.measured == false) {
+            // console.log("Chunk not measured");
+            // return -27;
+            measureChunk(chunk);
+          }
           var totalCol = partialCol + chunk.text.length;
           if (totalCol > rowcol[1])
             break;
@@ -509,8 +723,6 @@ Item {
         var chunkCol = rowcol[1] - partialCol;
 
         var ctext = chunk.text;
-
-        // console.log("lineChar: ", line.rawText[rowcol[1]], " chunkChar: ", ctext[chunkCol]);
 
         var j = 0;
         var tlen = ctext.length;
@@ -532,46 +744,18 @@ Item {
 
     }
 
-    // getLinesFromSelection returns an array of lines from the given
-    // selection and buffer. Works like buffer.Lines()
-    //
-    // note: the selection could be inverted, for example if a user starts
-    // selecting from the bottom up. This makes sure that the start of
-    // the selection is where the user stopped selecting.
-    function getLinesFromSelection(selection, buf) {
-        var lines = [];
-
-        var safeSelection = (selection.b > selection.a) ?
-                    { a: selection.a, b: selection.b }:
-                    { a: selection.b, b: selection.a };
-
-        var rowCol = {
-            a: buf.rowCol(safeSelection.a),
-            b: buf.rowCol(safeSelection.b)
-        };
-
-        for(var i = rowCol.a[0]; i <= rowCol.b[0]; i++) {
-            var lr = buf.line(buf.textPoint(i, 0)),
-                a = (i == rowCol.a[0]) ? safeSelection.a : lr.a,
-                b = (i == rowCol.b[0]) ? safeSelection.b : lr.b,
-                res = (b > a) ? {a: a, b: b} : {a: b, b: a};
-            lines.push(res);
-        }
-
-        return lines;
-    }
-
+    property real cursorOpacity: 1
     Timer {
         interval: 100
         repeat: true
         running: true
         onTriggered: {
-            var o = 0.5 + 0.5 * Math.sin(Date.now()*0.008);
+            cursorOpacity = 0.5 + 0.5 * Math.sin(Date.now()*0.008);
 
-            for (var i = 0; i < highlightedLines.count; i++) {
-                var rect =  highlightedLines.itemAt(i);
-                rect.cursor.opacity = o;
-            }
+            // for (var i = 0; i < highlightedLines.count; i++) {
+            //     var rect =  highlightedLines.itemAt(i);
+            //     rect.cursor.opacity = o;
+            // }
         }
     }
 }
