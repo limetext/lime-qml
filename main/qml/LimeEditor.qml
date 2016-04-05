@@ -8,8 +8,8 @@ Item {
     property var myView
     property var listView: listView
     // property bool isMinimap: false
-    property int fontSize: 12
-    property string fontFace: "Menlo"
+    property int fontSize: 10
+    property string fontFace: "Monospace"
     property var cursor: Qt.IBeamCursor
     property bool ctrl: false
 
@@ -27,7 +27,7 @@ Item {
       font.pointSize: editorRoot.fontSize
     }
 
-    property var editorFont: editorRoot.fontSize + "pt \"" + editorRoot.fontFace + "\""
+    property var editorFont: editorRoot.fontSize + "pt \"" + editorRoot.fontFace + "\"" + ", monospace"
     property var spaceWidth: 25
     property var tabWidth: spaceWidth * 4
     property var lineHeight: fontMetrics.lineSpacing
@@ -74,83 +74,90 @@ Item {
         property var cursor: editorRoot.cursor
 
         delegate:
-          Canvas {
-            id: canvas
-            property var line: myView && index > -1 ? myView.line(index) : null
-            property var lineText: !line ? null : line.text
-
-            onLineTextChanged: {
-              requestPaint();
-              // onSelectionModified();
-            }
-
-            // TODO: why doesn't this work?
-            // property var spaceWidth: fontMetrics.advanceWidth(' ')
-            // property var tabWidth: spaceWidth * 4
-
+          Item {
             width: parent.width
             height: lineHeight
 
+            Canvas {
+              id: canvas
+              property var line: myView && index > -1 ? myView.line(index) : null
+              property var lineText: !line ? null : line.text
 
-            onPaint: {
-              var l = line;
-              if (l == null) return;
-
-              // var spaceWidth = editorRoot.spaceWidth;
-              var tabWidth = editorRoot.tabWidth;
-              // var spaceWidth = fontMetrics.advanceWidth(' ');
-              // var tabWidth = spaceWidth * 4;
-
-              var ctx = canvas.getContext("2d");
-
-              ctx.font = editorFont;
-
-              var defaultColor = "#ffffff";
-              var currentColor = defaultColor;
-              ctx.fillStyle = currentColor;
-
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-              var len = l.chunksLen();
-              var x = 0;
-              var y = fontMetrics.ascent;
-              var yval = y - fontMetrics.strikeOutPosition;
-              for (var i = 0; i < len; i++) {
-                var c = l.chunk(i);
-
-                if (c.foreground === "") {
-                  if (currentColor !== defaultColor)
-                    ctx.fillStyle = currentColor = defaultColor;
-                } else {
-                  if (currentColor !== c.foreground)
-                    ctx.fillStyle =  '#' + (currentColor = c.foreground);
-                }
-
-                if (!c.measured) {
-                  measureChunk(c)
-                }
-
-                // ctx.fillRect(x, 0, 1, canvas.height); // Chunk left border
-
-                var ctext = c.text;
-                var ctlen = ctext.length;
-                var j = 0;
-
-                // TODO: Are tabs always at the beginning of the chunk?
-                while (j < ctlen && ctext[j] === '\t') {
-                  j++;
-                  ctx.fillRect(x+2, yval, tabWidth-4, 1);
-                  x += tabWidth;
-                }
-
-                ctext = ctext.slice(j);
-                // var cwidth = fontMetrics.advanceWidth(ctext);
-
-                ctx.fillText(ctext, x, y);
-                x += c.width;
+              onLineTextChanged: {
+                requestPaint();
+                // onSelectionModified();
               }
 
-              l.width = x;
+              // TODO: why doesn't this work?
+              // property var spaceWidth: fontMetrics.advanceWidth(' ')
+              // property var tabWidth: spaceWidth * 4
+
+              width: parent.width
+              height: lineHeight + 2
+
+
+              onPaint: {
+                var l = line;
+                if (l == null) return;
+
+                var drawTabs = false;
+
+                // var spaceWidth = editorRoot.spaceWidth;
+                var tabWidth = editorRoot.tabWidth;
+                // var spaceWidth = fontMetrics.advanceWidth(' ');
+                // var tabWidth = spaceWidth * 4;
+
+                var ctx = canvas.getContext("2d");
+
+                ctx.font = editorFont;
+
+                var defaultColor = "#ffffff";
+                var currentColor = defaultColor;
+                ctx.fillStyle = currentColor;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                var len = l.chunksLen();
+                var x = 0;
+                var y = fontMetrics.ascent;
+                var yval = y - fontMetrics.strikeOutPosition;
+                for (var i = 0; i < len; i++) {
+                  var c = l.chunk(i);
+
+                  if (c.foreground === "") {
+                    if (currentColor !== defaultColor)
+                      ctx.fillStyle = currentColor = defaultColor;
+                  } else {
+                    if (currentColor !== c.foreground)
+                      ctx.fillStyle =  '#' + (currentColor = c.foreground);
+                  }
+
+                  if (!c.measured) {
+                    measureChunk(c)
+                  }
+
+                  // ctx.fillRect(x, 0, 1, canvas.height); // Chunk left border
+
+                  var ctext = c.text;
+                  var ctlen = ctext.length;
+                  var j = 0;
+
+                  // TODO: Are tabs always at the beginning of the chunk?
+                  while (j < ctlen && ctext[j] === '\t') {
+                    j++;
+                    if (drawTabs) ctx.fillRect(x+2, yval, tabWidth-4, 1);
+                    x += tabWidth;
+                  }
+
+                  ctext = ctext.slice(j);
+                  // var cwidth = fontMetrics.advanceWidth(ctext);
+
+                  ctx.fillText(ctext, x, y);
+                  x += c.width;
+                }
+
+                l.width = x;
+              }
             }
           }
 

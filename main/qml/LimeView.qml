@@ -10,8 +10,8 @@ Item {
   id: viewRoot
 
   property var myView
-  property int fontSize: 12
-  property string fontFace: "Helvetica"
+  property int fontSize: 10
+  property string fontFace: "Monospace"
   property var cursor: Qt.IBeamCursor
   property bool ctrl: false
   property bool minimapVisible: true
