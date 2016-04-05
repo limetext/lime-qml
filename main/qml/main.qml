@@ -20,6 +20,22 @@ ApplicationWindow {
       var tab = tabs.getTab(tabs.currentIndex);
        return tab === undefined ? undefined : tab.item;
     }
+    
+    function addTab(title, view) {
+      // var tab = tabTemplate.createObject(tabs, {myView: view});
+      var tab = tabs.addTab(title, tabTemplate);
+      console.log("tab", tab, tab.item);
+
+      var loadTab = function() {
+        tab.item.myView = view;
+      }
+
+      if (tab.item != null) {
+        loadTab();
+      } else {
+        tab.loaded.connect(loadTab);
+      }
+    }
 
     menuBar: MenuBar {
         id: menu
@@ -195,6 +211,14 @@ ApplicationWindow {
                 Layout.alignment: Qt.AlignRight
             }
         }
+    }
+
+    // property var tabTemplate: Qt.createComponent("LimeView.qml")
+
+    Component {
+      id: tabTemplate
+
+      LimeView {}
     }
 
     Item {

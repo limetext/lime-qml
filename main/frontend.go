@@ -26,8 +26,7 @@ import (
 )
 
 var (
-	limeViewComponent qml.Object
-	scheme            *textmate.Theme
+	scheme *textmate.Theme
 )
 
 const (
@@ -164,31 +163,7 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 		return
 	}
 
-	tabs := w2.window.ObjectByName("tabs")
-	tab := tabs.Call("addTab", "", limeViewComponent).(qml.Object)
-	try_now := func() {
-		item := tab.Property("item").(qml.Object)
-		if item.Addr() == 0 {
-			// Happens as the item isn't actually loaded until we switch to the tab.
-			// Hence connecting to the loaded signal
-			return
-		}
-		item.Set("myView", fv)
-		// TODO: v.Settings().Get("font_size", 12)
-		// is sometimes returning int sometimes float64
-		var fSize float64
-		fz := v.Settings().Get("font_size", 12)
-		if tmp, ok := fz.(int); ok {
-			fSize = float64(tmp)
-		} else if tmp1, ok := fz.(float64); ok {
-			fSize = tmp1
-		}
-		item.Set("fontSize", fSize)
-		item.Set("fontFace", v.Settings().Get("font_face", "Helvetica").(string))
-	}
-	tab.On("loaded", try_now)
-	try_now()
-	tabs.Set("currentIndex", tabs.Property("count").(int)-1)
+	w2.window.Call("addTab", "", fv)
 }
 
 // called when a view is closed
@@ -231,6 +206,9 @@ func (t *qmlfrontend) onSelectionModified(v *backend.View) {
 		}
 	}
 	v2 := w2.views[i]
+	if v2.qv == nil {
+		return
+	}
 	v2.qv.Call("onSelectionModified")
 }
 
@@ -347,7 +325,6 @@ func (t *qmlfrontend) loop() (err error) {
 		if err != nil {
 			return err
 		}
-		limeViewComponent, err = engine.LoadFile(qmlViewFile)
 		return
 	}
 	if err := newEngine(); err != nil {
