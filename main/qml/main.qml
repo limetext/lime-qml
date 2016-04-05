@@ -39,56 +39,56 @@ ApplicationWindow {
     menuBar: MenuBar {
         id: menu
         Menu {
-            title: qsTr("&File")
+            title: qsTr("File")
             MenuItem {
-                text: qsTr("&New File")
+                text: qsTr("New File")
                 shortcut: "Ctrl+N"
                 onTriggered: frontend.runCommand("new_file");
             }
             MenuItem {
-                text: qsTr("&Open File...")
+                text: qsTr("Open File...")
                 shortcut: "Ctrl+O"
                 onTriggered: openDialog.open();
             }
             MenuItem {
-                text: qsTr("&Save")
+                text: qsTr("Save")
                 shortcut: "Ctrl+S"
                 onTriggered: frontend.runCommand("save");
             }
             MenuItem {
-                text: qsTr("&Save As...")
+                text: qsTr("Save As...")
                 shortcut: "Shift+Ctrl+S"
                 // TODO(.) : qml doesn't have a ready dialog like FileDialog
                 // onTriggered: saveAsDialog.open()
             }
             MenuItem {
-                text: qsTr("&Save All")
+                text: qsTr("Save All")
                 onTriggered: frontend.runCommand("save_all")
             }
             MenuSeparator{}
             MenuItem {
-                text: qsTr("&New Window")
+                text: qsTr("New Window")
                 shortcut: "Shift+Ctrl+N"
                 onTriggered: frontend.runCommand("new_window");
             }
             MenuItem {
-                text: qsTr("&Close Window")
+                text: qsTr("Close Window")
                 shortcut: "Shift+Ctrl+W"
                 onTriggered: frontend.runCommand("close_window");
             }
             MenuSeparator{}
             MenuItem {
-                text: qsTr("&Close File")
+                text: qsTr("Close File")
                 shortcut: "Ctrl+W"
                 onTriggered: frontend.runCommand("close_view");
             }
             MenuItem {
-                text: qsTr("&Close All Files")
+                text: qsTr("Close All Files")
                 onTriggered: frontend.runCommand("close_all");
             }
             MenuSeparator{}
             MenuItem {
-                text: qsTr("&Quit")
+                text: qsTr("Quit")
                 shortcut: "Ctrl+Q"
                 onTriggered: Qt.quit(); // frontend.runCommand("quit");
             }
@@ -101,61 +101,66 @@ ApplicationWindow {
             }
         }
         Menu {
-            title: qsTr("&Edit")
+            title: qsTr("Edit")
             MenuItem {
-                text: qsTr("&Undo")
+                text: qsTr("Undo")
                 shortcut: "Ctrl+Z"
                 onTriggered: frontend.runCommand("undo");
             }
             MenuItem {
-                text: qsTr("&Redo")
+                text: qsTr("Redo")
                 shortcut: "Ctrl+Y"
                 onTriggered: frontend.runCommand("redo");
             }
             Menu {
-                title: qsTr("&Undo Selection")
+                title: qsTr("Undo Selection")
                 MenuItem {
-                    text: qsTr("&Soft Undo")
+                    text: qsTr("Soft Undo")
                     shortcut: "Ctrl+U"
                     onTriggered: frontend.runCommand("soft_undo");
                 }
                 MenuItem {
-                    text: qsTr("&Soft Redo")
+                    text: qsTr("Soft Redo")
                     shortcut: "Shift+Ctrl+U"
                     onTriggered: frontend.runCommand("soft_redo");
                 }
             }
             MenuSeparator{}
             MenuItem {
-                text: qsTr("&Copy")
+                text: qsTr("Copy")
                 shortcut: "Ctrl+C"
                 onTriggered: frontend.runCommand("copy");
             }
             MenuItem {
-                text: qsTr("&Cut")
+                text: qsTr("Cut")
                 shortcut: "Ctrl+X"
                 onTriggered: frontend.runCommand("cut");
             }
             MenuItem {
-                text: qsTr("&Paste")
+                text: qsTr("Paste")
                 shortcut: "Ctrl+V"
                 onTriggered: frontend.runCommand("paste");
             }
         }
         Menu {
-            title: qsTr("&View")
+            title: qsTr("View")
             MenuItem {
-                text: qsTr("Sh&ow/Hide Console")
+                text: qsTr("Show/Hide Console")
                 shortcut: "Ctrl+`"
-                onTriggered: if (consoleView.visible == true) { consoleView.visible=false } else { consoleView.visible=true }
+                onTriggered: { consoleView.visible = !consoleView.visible }
             }
             MenuItem {
                 text: qsTr("Show/Hide Minimap")
-                onTriggered: if (minimap.visible == true) { minimap.visible=false } else { minimap.visible=true }
+                onTriggered: {
+                  var tab = tabs.getTab(tabs.currentIndex);
+
+                  if (tab.item)
+                    tab.item.minimapVisible = !tab.item.minimapVisible;
+                }
             }
             MenuItem {
-                text: qsTr("Sh&ow/Hide Statusbar")
-                onTriggered: if (statusBar.visible == true) { statusBar.visible=false } else { statusBar.visible=true }
+                text: qsTr("Show/Hide Statusbar")
+                onTriggered: { statusBar.visible = !statusBar.visible }
             }
         }
     }
@@ -224,12 +229,14 @@ ApplicationWindow {
         anchors.fill: parent
         Keys.onPressed: {
           var v = view(); if (v === undefined) return;
-            v.ctrl = (event.key == Qt.Key_Control) ? true : false;
-            event.accepted = frontend.handleInput(event.text, event.key, event.modifiers)
+          v.ctrl = (event.key == Qt.Key_Control) ? true : false;
+          event.accepted = frontend.handleInput(event.text, event.key, event.modifiers)
+          // if (event.key == Qt.Key_Alt)
+          event.accepted = true;
         }
         Keys.onReleased: {
           var v = view(); if (v === undefined) return;
-            v.ctrl = (event.key == Qt.Key_Control) ? false : view().ctrl;
+          v.ctrl = (event.key == Qt.Key_Control) ? false : view().ctrl;
         }
         focus: true // Focus required for Keys.onPressed
         SplitView {
