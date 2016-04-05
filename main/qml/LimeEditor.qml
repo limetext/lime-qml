@@ -630,6 +630,7 @@ Item {
       //     of = 0; // todo: rename 'of' to something more descriptive
 
       highlightedLines.currentSelection = getCurrentSelection();
+      resetBlink();
 
       // console.log("SelectionModified", highlightedLines.currentSelection);
     }
@@ -752,13 +753,18 @@ Item {
 
     }
 
+
+    function resetBlink() {
+      startTime = Date.now()
+    }
     property real cursorOpacity: 1
+    property real startTime: Date.now()
     Timer {
         interval: 100
         repeat: true
         running: true
         onTriggered: {
-            cursorOpacity = 0.5 + 0.5 * Math.sin(Date.now()*0.008);
+            cursorOpacity = 0.5 + 0.5 * Math.cos((Date.now() - startTime)*0.008);
 
             // for (var i = 0; i < highlightedLines.count; i++) {
             //     var rect =  highlightedLines.itemAt(i);
