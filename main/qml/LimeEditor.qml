@@ -85,7 +85,6 @@ Item {
 
               onLineTextChanged: {
                 requestPaint();
-                // onSelectionModified();
               }
 
               // TODO: why doesn't this work?
@@ -272,13 +271,6 @@ Item {
             }
 
 
-            // Rectangle {
-            //   id: testRect
-            //   height: 1000
-            //   opacity: 0.1
-            //   z: 10000
-            // }
-
             onPositionChanged: {
                 var item  = listView.itemAt(0, mouse.y+listView.contentY),
                     index = listView.indexAt(0, mouse.y+listView.contentY),
@@ -302,24 +294,22 @@ Item {
                 // TODO:
                 // Changing caret position doesn't work on empty lines
 
-                  var item  = listView.itemAt(0, mouse.y+listView.contentY),
-                      index = listView.indexAt(0, mouse.y+listView.contentY),
-                      selection = getCurrentSelection();
+                var item  = listView.itemAt(0, mouse.y+listView.contentY),
+                    index = listView.indexAt(0, mouse.y+listView.contentY),
+                    selection = getCurrentSelection();
 
-                  if (item != null) {
-                      var col = colFromMouseX(index, mouse.x);
-                      point.p = myView.back().buffer().textPoint(index, col)
+                if (item != null) {
+                    var col = colFromMouseX(index, mouse.x);
+                    point.p = myView.back().buffer().textPoint(index, col)
 
-                      if (!ctrl) {
-                          selection.clear();
-                      }
+                    if (!ctrl) {
+                        selection.clear();
+                    }
 
-                      selection.add(myView.region(point.p, point.p));
-                      // if (ctrl) {
-                      //   console.log("Added empty: ", getCurrentSelection(), selection.len(), selection.get(0), selection.get(1));
-                      // }
-                      onSelectionModified();
-                  }
+                    selection.add(myView.region(point.p, point.p));
+
+                    onSelectionModified();
+                }
             }
 
             onDoubleClicked: {
@@ -531,7 +521,7 @@ Item {
                 var lastxB = -1;
 
                 if (first[0] == last[0] && first[1] == last[1]) {
-                  var xA = getCursorOffsetNew(first, buf);
+                  var xA = getCursorOffset(first, buf);
 
 
                   var caretStyle = myView.setting("caret_style"),
@@ -566,8 +556,8 @@ Item {
                   var rowcolA = buf.rowCol(a);
                   var rowcolB = buf.rowCol(b);
 
-                  var xA = getCursorOffsetNew(rowcolA, buf);
-                  var xB = getCursorOffsetNew(rowcolB, buf);
+                  var xA = getCursorOffset(rowcolA, buf);
+                  var xB = getCursorOffset(rowcolB, buf);
                   // console.log("A", rowcolA, xA, a, lr.a, " B", rowcolB, xB, b, lr.b);
 
                   // ctx.clearRect(0, y, selCanvas.width, lh+1);
@@ -622,89 +612,12 @@ Item {
     }
 
     function onSelectionModified() {
-      // if (myView == undefined) return;
-
-      // var selection = getCurrentSelection(),
-      //     backend = myView.back(),
-      //     buf = backend.buffer(),
-      //     of = 0; // todo: rename 'of' to something more descriptive
-
       highlightedLines.currentSelection = getCurrentSelection();
       resetBlink();
-
-      // console.log("SelectionModified", highlightedLines.currentSelection);
-    }
-
-    function onSelectionModifiedOld() {
-        if (myView == undefined) return;
-
-        var selection = getCurrentSelection(),
-            backend = myView.back(),
-            buf = backend.buffer(),
-            of = 0; // todo: rename 'of' to something more descriptive
-
-        highlightedLines.model = myView.regionLines();
-
-        for(var i = 0; i < selection.len(); i++) {
-            var rect = highlightedLines.itemAt(i),
-                s = selection.get(i);
-
-            if (!s || !rect) continue;
-
-            var rowcol,
-                lns = getLinesFromSelection(s, buf);
-
-            // checks if we moved cursor forward or backward
-            if (s.b <= s.a) lns.reverse();
-            for(var j = 0; j < lns.length; j++) {
-                var nrect = highlightedLines.itemAt(i+of);
-                of++;
-                if (nrect === null) {
-                  continue;
-                }
-                rect = nrect;
-                rowcol = buf.rowCol(lns[j].a);
-                // rect.rowcol = rowcol;
-                try {
-                  rect.rowcol = rowcol;
-                }
-                catch (e) {
-                  console.log("rowcol: ", rowcol, i, of, rect);
-                }
-                rect.x = getCursorOffset(lns[j].a, rowcol, rect.cursor, buf);
-                rowcol = buf.rowCol(lns[j].b);
-                rect.width = getCursorOffset(lns[j].b, rowcol, rect.cursor, buf) - rect.x;
-            }
-            of--;
-
-            rect.cursor.x = (s.b <= s.a) ? 0 : rect.width;
-            rect.cursor.opacity = 1;
-
-            var caretStyle = myView.setting("caret_style"),
-                inverseCaretState = myView.setting("inverse_caret_state");
-
-            if (caretStyle == "underscore") {
-                if (inverseCaretState) {
-                    rect.cursor.text = "_";
-                    if (rect.width != 0)
-                        rect.cursor.x -= rect.cursor.width;
-                } else {
-                    rect.cursor.text = "|";
-                    // Shift the cursor to the edge of the character
-                    rect.cursor.x -= 4;
-                }
-            }
-        }
-        // Clearing
-        for(var i = of + selection.len()+1; i < highlightedLines.count; i++) {
-            var rect = highlightedLines.itemAt(i);
-            if (!rect) continue;
-            rect.width = 0;
-        }
     }
 
     // getCursorOffset returns the x coordinate for the cursor.
-    function getCursorOffsetNew(rowcol, buf) {
+    function getCursorOffset(rowcol, buf) {
         var line = myView.line(rowcol[0]);
 
         var len = line.chunksLen();

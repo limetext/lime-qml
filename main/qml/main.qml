@@ -20,9 +20,8 @@ ApplicationWindow {
       var tab = tabs.getTab(tabs.currentIndex);
        return tab === undefined ? undefined : tab.item;
     }
-    
+
     function addTab(title, view) {
-      // var tab = tabTemplate.createObject(tabs, {myView: view});
       var tab = tabs.addTab(title, tabTemplate);
       console.log("tab", tab, tab.item);
 
