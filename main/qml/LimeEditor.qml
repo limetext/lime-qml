@@ -6,6 +6,7 @@ Item {
 
     property var linesModel
     property var myView
+    property var listView: listView
     // property bool isMinimap: false
     property int fontSize: 12
     property string fontFace: "Menlo"

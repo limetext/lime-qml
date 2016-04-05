@@ -45,18 +45,15 @@ Item {
   }
 
   function updateMyView() {
-      // if (!isMinimap) {
-          console.log("LimeEditor: updateMyView: ", myView);
-          linesModel.clear();
-          // listView.myView = myView;
-          if (myView)
-            myView.fix(viewRoot);
-      // }
+      console.log("LimeEditor: updateMyView: ", myView);
+      linesModel.clear();
+      if (myView)
+        myView.fix(viewRoot);
   }
 
   function onSelectionModified() {
       if (myView == undefined) return;
-      editorView.onSelectionModified()
+      editorView.onSelectionModified();
       // minimap.onSelectionModified()
   }
 
@@ -92,6 +89,7 @@ Item {
 
         linesModel: viewRoot.linesModel
         myView: viewRoot.myView
+        mainListView: editorView.listView
         fontSize: viewRoot.fontSize
         fontFace: viewRoot.fontFace
         cursor: viewRoot.cursor
@@ -101,54 +99,6 @@ Item {
         //   console.log("initizing minimap: ", minimap.x)
         // }
 
-        // property var oldView
-
-        function scroll() {
-            var p = percentage(myView);
-            // children[1].contentY = p*(children[1].contentHeight-height);
-            if (!ma.drag.active) {
-                minimapArea.y =  p*(height-minimapArea.height)
-            }
-        }
-        // onMyViewChanged: {
-        //   // console.log("myViewChanged", myView);
-        //     if (oldView && oldView.contentYChanged) {
-        //         oldView.contentYChanged.disconnect(scroll);
-        //     }
-        //     if (myView && myView.contentYChanged) {
-        //       myView.contentYChanged.connect(scroll);
-        //     }
-        //     oldView = myView;
-        // }
-        function percentage(view) {
-            if (view === undefined) { return 10; }
-            if (!view.visibleArea) return 10;
-            return view.visibleArea.yPosition/(1-view.visibleArea.heightRatio);
-        }
-        Rectangle {
-            id: minimapArea
-            width: parent.width
-            height: (myView && myView.visibleArea) ? myView.visibleArea.heightRatio*parent.children[1].contentHeight : parent.height
-            color: "white"
-            opacity: 0.1
-            onYChanged: {
-                if (ma.drag.active) {
-                    myView.contentY = y*(myView.contentHeight-myView.height)/(parent.height-height);
-                }
-            }
-            onHeightChanged: {
-                parent.scroll();
-            }
-            MouseArea {
-                id: ma
-                drag.target: parent
-                anchors.fill: parent
-                drag.minimumX: 0
-                drag.minimumY: 0
-                drag.maximumY: parent.parent.height-height
-                drag.maximumX: parent.parent.width-width
-            }
-        }
     }
   }
 }

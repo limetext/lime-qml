@@ -6,6 +6,7 @@ Item {
 
     property var linesModel
     property var myView
+    property var mainListView
     property int fontSize: 12
     property string fontFace: "Menlo"
     property var cursor: Qt.IBeamCursor
@@ -149,6 +150,62 @@ Item {
             }
 
 
+    }
+
+
+    property var oldView
+
+    function scroll() {
+        var p = percentage(mainListView);
+        // console.log("scroll:", p);
+        // children[1].contentY = p*(children[1].contentHeight-height);
+        if (!ma.drag.active) {
+            minimapArea.y =  p*(Math.min(height, listView.contentHeight)-minimapArea.height)
+        }
+    }
+    onMainListViewChanged: {
+      // console.log("mainListViewChanged", mainListView);
+      if (oldView && oldView.contentYChanged) {
+          oldView.contentYChanged.disconnect(scroll);
+      }
+      if (mainListView && mainListView.contentYChanged) {
+        mainListView.contentYChanged.connect(scroll);
+        // console.log("connected");
+      }
+      oldView = mainListView;
+      scroll();
+    }
+    function percentage(view) {
+      if (view === undefined) { return 10; }
+      if (!view.visibleArea) return 10;
+      // console.log("visibleArea: ", view.visibleArea.yPosition, view.visibleArea.heightRatio);
+      return view.visibleArea.yPosition/(1-view.visibleArea.heightRatio);
+    }
+
+
+    Rectangle {
+        id: minimapArea
+        width: parent.width
+        height: (mainListView && mainListView.visibleArea) ? mainListView.visibleArea.heightRatio*listView.contentHeight : parent.height
+        color: "white"
+        opacity: 0.1
+        onYChanged: {
+            if (ma.drag.active) {
+                mainListView.contentY = y*(mainListView.contentHeight-mainListView.height)/ma.drag.maximumY;
+            }
+        }
+        onHeightChanged: {
+            parent.scroll();
+        }
+        MouseArea {
+            id: ma
+            drag.target: parent
+            anchors.fill: parent
+            drag.minimumX: 0
+            drag.minimumY: 0
+            drag.maximumY: Math.min(parent.parent.height, listView.contentHeight)-height
+            drag.maximumX: parent.parent.width-width
+        }
     }
 
 }
