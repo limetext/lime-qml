@@ -217,8 +217,6 @@ ApplicationWindow {
         }
     }
 
-    // property var tabTemplate: Qt.createComponent("LimeView.qml")
-
     Component {
       id: tabTemplate
 

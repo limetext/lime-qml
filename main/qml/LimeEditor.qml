@@ -101,10 +101,7 @@ Item {
 
                 var drawTabs = false;
 
-                // var spaceWidth = editorRoot.spaceWidth;
                 var tabWidth = editorRoot.tabWidth;
-                // var spaceWidth = fontMetrics.advanceWidth(' ');
-                // var tabWidth = spaceWidth * 4;
 
                 var ctx = canvas.getContext("2d");
 
@@ -149,7 +146,6 @@ Item {
                   }
 
                   ctext = ctext.slice(j);
-                  // var cwidth = fontMetrics.advanceWidth(ctext);
 
                   ctx.fillText(ctext, x, y);
                   x += c.width;
@@ -197,32 +193,17 @@ Item {
                 var line = myView.line(lineIndex);
                 var lineText = line.rawText;
 
-                // var line = myView.back().buffer().line(myView.back().buffer().textPoint(lineIndex, 0));
-                // var lineText = myView.back().buffer().substr(line);
-
-                // if (printDebug) console.log("Raw line: ", myView.line(lineIndex).text);
-
-                // if (printDebug) console.log("Line: ", JSON.stringify(lineText), lineText.length);
-                // if (printDebug) console.log("mouseX: ", mouseX);
-
-                // var fullWidth = fontMetrics.advanceWidth(lineText);
                 var fullWidth = line.width;
-                // if (printDebug) console.log("Line width: ", JSON.stringify(fullWidth));
 
 
                 // if the click was farther right than the last character of
                 // the line then return the last character's column
                 if(mouseX > fullWidth) {
-                  // if (printDebug) console.log("bigwidth: ", myView.back().buffer().rowCol(line.b)[1], ", ", lineText.length);
-                  return lineText.length; //myView.back().buffer().rowCol(line.b)[1]
+                  return lineText.length;
                 }
 
-                // fixme: why do we need this magic number? because of floor instead of round
-                // const OFFSET_MAGIC_NUMBER = 0.5;
-
                 // calculate a column from a given mouse x coordinate and the line text.
-                var col; // = Math.round(lineText.length * (mouseX / fullWidth));
-                //if (col < 0) col = 0;
+                var col;
 
                 // Trying to find closest column to clicked position
                 var len = line.chunksLen();
@@ -251,8 +232,6 @@ Item {
                   chunkX -= chunk.skipWidth;
 
                   var ctext = chunk.text;
-
-                  // console.log("clickedChunk: ", JSON.stringify(ctext), chunkX, chunk.width);
 
                   var j = 0;
                   while (j < ctext.length && ctext[j] == '\t') j++;
@@ -349,7 +328,6 @@ Item {
         Rectangle {
             id: verticalScrollBar
 
-            // visible: !isMinimap
             width: 10
             radius: width
             height: listView.visibleArea.heightRatio * listView.height
@@ -399,7 +377,6 @@ Item {
         model: currentSelection ? currentSelection.len() : 0
 
         onCurrentSelectionChanged: {
-          // console.log("currentSelection changed", highlightedLines.model);
           model = currentSelection ? currentSelection.len() : 0;
           if (!currentSelection) console.log("Bad currentSelection!", currentSelection);
         }
@@ -414,17 +391,14 @@ Item {
               onCurrentSelectionChanged: updateSelection()
             }
             Component.onCompleted: {
-              // console.log("completed");
               updateSelection();
             }
 
 
             function updateSelection() {
-              // console.log("csel", highlightedLines.currentSelection);
               var csel = highlightedLines.currentSelection;
               if (csel) {
                 selection = csel.get(index);
-                // console.log("cc selection changed: ", index, selection);
               }
               else {
                 console.log("cc bad cs ", csel);
@@ -433,23 +407,17 @@ Item {
 
             property var selection: null
             property var safeSelection: null
-            // property var rowcol: null
-            // property var cursor: children[0]
             property bool isBlinking: false
 
-            // color: "#aaaa2288"
-            // radius: 2
-            // border.color: "#1c1c1c"
             height: lineHeight
             width: listView.width
-            y: 0 //getYPosition(rowcol)
+            y: 0
             z: listView.z-1
 
             property var lastSelection: null
 
             onSelectionChanged: {
               if (!selection) return;
-              // console.log("selection changed: ", index, selection? selection.a + " " + selection.b : selection);
 
               if (lastSelection && lastSelection.a == selection.a && lastSelection.b == selection.b) {
                 console.log("Selection not changed");
@@ -458,10 +426,7 @@ Item {
 
               var buf = myView.back().buffer();
 
-              // console.log("a");
-
               safeSelection = toSafeSelection(selection);
-              // console.log("b");
 
               var first = buf.rowCol(safeSelection.a);
               var last = buf.rowCol(safeSelection.b);
@@ -469,32 +434,25 @@ Item {
               var firstLine = first[0];
               var lastLine = last[0];
 
-              // console.log("c");
-
               y = firstLine * lineHeight;
               height = (lastLine - firstLine + 1) * lineHeight + 1;
 
-              // console.log("d");
-
               selCanvas.requestPaint();
-              // console.log("paint requested", first, last);
             }
 
             function getYPosition(rowCol) {
                 if(rowCol) {
-                    return rowcol[0] * lineHeight;// - listView.contentY;
+                    return rowcol[0] * lineHeight;
                 }
                 return 0;
             }
 
             onPaint: {
-              // console.log("onPaint");
                 if (!selection) {
                   console.log("Skipping paint");
                   return;
                 }
-                var //selection = getCurrentSelection()[index],
-                    backend = myView.back(),
+                var backend = myView.back(),
                     buf = backend.buffer();
 
                 var ctx = selCanvas.getContext("2d");
@@ -510,8 +468,6 @@ Item {
 
                 var firstLine = first[0];
                 var lastLine = last[0];
-
-                // console.log("Painting: ", first, last);
 
                 var lh = lineHeight;
 
@@ -558,9 +514,6 @@ Item {
 
                   var xA = getCursorOffset(rowcolA, buf);
                   var xB = getCursorOffset(rowcolB, buf);
-                  // console.log("A", rowcolA, xA, a, lr.a, " B", rowcolB, xB, b, lr.b);
-
-                  // ctx.clearRect(0, y, selCanvas.width, lh+1);
 
                   ctx.fillStyle = fillColor;
                   ctx.fillRect(xA+1, y, xB-xA-1, lh+1);
@@ -588,24 +541,11 @@ Item {
 
               }
             }
-
-            // Text {
-            //     color: "#F8F8F0"
-            //     font.family: editorRoot.fontFace
-            //     font.pointSize: editorRoot.fontSize
-            // }
         }
     }
   }
 
     function toSafeSelection(selection, buf) {
-      // var rowColA, rowColB;
-
-      // if (buf) {
-      //   rowColA = buf.rowCol(selection.a);
-      //   rowColB = buf.rowCol(selection.b);
-      // }
-
       return (selection.b > selection.a) ?
                   { a: selection.a, b: selection.b, reversed: false }:
                   { a: selection.b, b: selection.a, reversed: true };
@@ -629,8 +569,6 @@ Item {
         while (ci < len) {
           chunk = line.chunk(ci);
           if (chunk.measured == false) {
-            // console.log("Chunk not measured");
-            // return -27;
             measureChunk(chunk);
           }
           var totalCol = partialCol + chunk.text.length;
@@ -678,11 +616,6 @@ Item {
         running: true
         onTriggered: {
             cursorOpacity = 0.5 + 0.5 * Math.cos((Date.now() - startTime)*0.008);
-
-            // for (var i = 0; i < highlightedLines.count; i++) {
-            //     var rect =  highlightedLines.itemAt(i);
-            //     rect.cursor.opacity = o;
-            // }
         }
     }
 }

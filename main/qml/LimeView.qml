@@ -54,7 +54,6 @@ Item {
   function onSelectionModified() {
       if (myView == undefined) return;
       editorView.onSelectionModified();
-      // minimap.onSelectionModified()
   }
 
   RowLayout {
@@ -71,10 +70,6 @@ Item {
         fontFace: viewRoot.fontFace
         cursor: viewRoot.cursor
         ctrl: viewRoot.ctrl
-
-        // Component.onCompleted: {
-        //   console.log("initizing editor: ", this.x)
-        // }
     }
     LimeMinimap {
         id: minimap
@@ -94,11 +89,6 @@ Item {
         fontFace: viewRoot.fontFace
         cursor: viewRoot.cursor
         ctrl: viewRoot.ctrl
-
-        // Component.onCompleted: {
-        //   console.log("initizing minimap: ", minimap.x)
-        // }
-
     }
   }
 }

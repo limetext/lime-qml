@@ -8,7 +8,7 @@ Item {
     property var myView
     property var mainListView
     property int fontSize: 12
-    property string fontFace: "Menlo"
+    property string fontFace: "Monospace"
     property var cursor: Qt.IBeamCursor
     property bool ctrl: false
 
@@ -124,20 +124,16 @@ Item {
 
     function scroll() {
         var p = percentage(mainListView);
-        // console.log("scroll:", p);
-        // children[1].contentY = p*(children[1].contentHeight-height);
         if (!ma.drag.active) {
             minimapArea.y =  p*(Math.min(height, listView.contentHeight)-minimapArea.height)
         }
     }
     onMainListViewChanged: {
-      // console.log("mainListViewChanged", mainListView);
       if (oldView && oldView.contentYChanged) {
           oldView.contentYChanged.disconnect(scroll);
       }
       if (mainListView && mainListView.contentYChanged) {
         mainListView.contentYChanged.connect(scroll);
-        // console.log("connected");
       }
       oldView = mainListView;
       scroll();
@@ -145,7 +141,6 @@ Item {
     function percentage(view) {
       if (view === undefined) { return 10; }
       if (!view.visibleArea) return 10;
-      // console.log("visibleArea: ", view.visibleArea.yPosition, view.visibleArea.heightRatio);
       return view.visibleArea.yPosition/(1-view.visibleArea.heightRatio);
     }
 
