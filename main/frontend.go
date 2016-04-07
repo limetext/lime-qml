@@ -26,14 +26,13 @@ import (
 )
 
 var (
-	limeViewComponent qml.Object
-	scheme            *textmate.Theme
+	scheme *textmate.Theme
 )
 
 const (
 	batching_enabled = true
-	qmlMainFile      = "main.qml"
-	qmlViewFile      = "LimeView.qml"
+	qmlMainFile      = "qml/main.qml"
+	qmlViewFile      = "qml/LimeView.qml"
 
 	// http://qt-project.org/doc/qt-5.1/qtcore/qt.html#KeyboardModifier-enum
 	shift_mod  = 0x02000000
@@ -160,31 +159,11 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 	w2 := t.windows[v.Window()]
 	w2.views = append(w2.views, fv)
 
-	tabs := w2.window.ObjectByName("tabs")
-	tab := tabs.Call("addTab", "", limeViewComponent).(qml.Object)
-	try_now := func() {
-		item := tab.Property("item").(qml.Object)
-		if item.Addr() == 0 {
-			// Happens as the item isn't actually loaded until we switch to the tab.
-			// Hence connecting to the loaded signal
-			return
-		}
-		item.Set("myView", fv)
-		// TODO: v.Settings().Get("font_size", 12)
-		// is sometimes returning int sometimes float64
-		var fSize float64
-		fz := v.Settings().Get("font_size", 12)
-		if tmp, ok := fz.(int); ok {
-			fSize = float64(tmp)
-		} else if tmp1, ok := fz.(float64); ok {
-			fSize = tmp1
-		}
-		item.Set("fontSize", fSize)
-		item.Set("fontFace", v.Settings().Get("font_face", "Helvetica").(string))
+	if w2.window == nil {
+		return
 	}
-	tab.On("loaded", try_now)
-	try_now()
-	tabs.Set("currentIndex", tabs.Property("count").(int)-1)
+
+	w2.window.Call("addTab", "", fv)
 }
 
 // called when a view is closed
@@ -227,6 +206,9 @@ func (t *qmlfrontend) onSelectionModified(v *backend.View) {
 		}
 	}
 	v2 := w2.views[i]
+	if v2.qv == nil {
+		return
+	}
 	v2.qv.Call("onSelectionModified")
 }
 
@@ -343,7 +325,6 @@ func (t *qmlfrontend) loop() (err error) {
 		if err != nil {
 			return err
 		}
-		limeViewComponent, err = engine.LoadFile(qmlViewFile)
 		return
 	}
 	if err := newEngine(); err != nil {
@@ -385,16 +366,22 @@ func (t *qmlfrontend) loop() (err error) {
 		return
 	}
 	defer watch.Close()
-	watch.Watch(".")
-	defer watch.RemoveWatch(".")
+	watch.Watch("qml")
+	defer watch.RemoveWatch("qml")
 
 	reloadRequested := false
+	waiting := false
 
 	go func() {
+		// reloadRequested = true
+		// t.Quit()
+
 		for {
+			time.Sleep(1 * time.Second) // quitting too frequently causes crashes
+
 			select {
 			case ev := <-watch.Event:
-				if ev != nil && strings.HasSuffix(ev.Name, ".qml") && ev.IsModify() && !ev.IsAttrib() {
+				if ev != nil && strings.HasSuffix(ev.Name, ".qml") && ev.IsModify() && !ev.IsAttrib() && !reloadRequested && waiting {
 					reloadRequested = true
 					t.Quit()
 				}
@@ -409,7 +396,9 @@ func (t *qmlfrontend) loop() (err error) {
 		log.Debug("Waiting for all windows to close")
 		// wg would be the WaitGroup all windows belong to, so first we wait for
 		// all windows to close.
+		waiting = true
 		wg.Wait()
+		waiting = false
 		log.Debug("All windows closed. reloadRequest: %v", reloadRequested)
 		// then we check if there's a reload request in the pipe
 		if !reloadRequested || len(t.windows) == 0 {
@@ -441,6 +430,13 @@ func (t *qmlfrontend) loop() (err error) {
 		// Succeeded loading the file, re-launch all windows
 		for _, v := range t.windows {
 			v.launch(&wg, component)
+
+			for i, bv := range v.Back().Views() {
+				t.onNew(bv)
+				t.onLoad(bv)
+
+				v.View(i)
+			}
 		}
 	}
 

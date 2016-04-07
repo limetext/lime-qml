@@ -13,6 +13,7 @@ import (
 	"gopkg.in/qml.v1"
 
 	"github.com/limetext/lime-backend/lib"
+	"github.com/limetext/lime-backend/lib/log"
 	"github.com/limetext/lime-backend/lib/render"
 	"github.com/limetext/lime-backend/lib/util"
 	. "github.com/limetext/text"
@@ -30,7 +31,30 @@ type frontendView struct {
 // This allows us to trigger a qml.Changed on a specific line in the view so
 // that only it is re-rendered by qml
 type lineStruct struct {
-	Text string
+	Text     string
+	RawText  string
+	Chunks   []lineChunk
+	Width    int
+	Measured bool
+}
+
+// func (l *lineStruct) AllChunks() []lineChunk {
+// 	return l.Chunks
+// }
+func (l *lineStruct) ChunksLen() int {
+	return len(l.Chunks)
+}
+func (l *lineStruct) Chunk(i int) *lineChunk {
+	return &l.Chunks[i]
+}
+
+type lineChunk struct {
+	Text       string
+	Background string
+	Foreground string
+	SkipWidth  int
+	Width      int
+	Measured   bool
 }
 
 // htmlcol returns the hex color value for the given Colour object
@@ -38,7 +62,15 @@ func htmlcol(c render.Colour) string {
 	return fmt.Sprintf("%02X%02X%02X", c.R, c.G, c.B)
 }
 
+func (fv *frontendView) Lines() int {
+	return len(fv.FormattedLine)
+}
+
 func (fv *frontendView) Line(index int) *lineStruct {
+	if index < 0 || index >= len(fv.FormattedLine) {
+		log.Error("Error? Line index out of bounds: %v %v\n", index, len(fv.FormattedLine))
+		return nil
+	}
 	return fv.FormattedLine[index]
 }
 
@@ -67,6 +99,18 @@ func (fv *frontendView) Back() *backend.View {
 
 func (fv *frontendView) Fix(obj qml.Object) {
 	fv.qv = obj
+	obj.On("destroyed", func() {
+		if fv.qv == obj {
+			fv.qv = nil
+		}
+	})
+
+	if len(fv.FormattedLine) == 0 && fv.bv.Buffer().Size() > 0 {
+		fv.bufferChanged(fv.bv.Buffer(), 0, fv.bv.Buffer().Size())
+		return
+	}
+
+	log.Info("Fix: %v  %v  %v", obj, len(fv.FormattedLine), fv.bv.Buffer().Size())
 
 	for i := range fv.FormattedLine {
 		_ = i
@@ -77,6 +121,13 @@ func (fv *frontendView) Fix(obj qml.Object) {
 func (fv *frontendView) bufferChanged(buf Buffer, pos, delta int) {
 	prof := util.Prof.Enter("frontendView.bufferChanged")
 	defer prof.Exit()
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("Recovered from error in bufferChanged", r)
+			fv.qv = nil
+		}
+	}()
 
 	row1, _ := buf.RowCol(pos)
 	row2, _ := buf.RowCol(pos + delta)
@@ -91,7 +142,7 @@ func (fv *frontendView) bufferChanged(buf Buffer, pos, delta int) {
 			copy(nn, fv.FormattedLine[:r1])
 			copy(nn[r1+add:], fv.FormattedLine[r1:])
 			for i := 0; i < add; i++ {
-				nn[r1+i] = &lineStruct{Text: ""}
+				nn[r1+i] = &lineStruct{}
 			}
 			fv.FormattedLine = nn
 			for i := 0; i < add; i++ {
@@ -129,7 +180,7 @@ func (fv *frontendView) formatLine(line int) {
 	buf := bytes.NewBuffer(nil)
 	vr := fv.bv.Buffer().Line(fv.bv.Buffer().TextPoint(line, 0))
 	for line >= len(fv.FormattedLine) {
-		fv.FormattedLine = append(fv.FormattedLine, &lineStruct{Text: ""})
+		fv.FormattedLine = append(fv.FormattedLine, &lineStruct{})
 		if fv.qv != nil {
 			fv.qv.Call("addLine")
 		}
@@ -137,6 +188,7 @@ func (fv *frontendView) formatLine(line int) {
 	if vr.Size() == 0 {
 		if fv.FormattedLine[line].Text != "" {
 			fv.FormattedLine[line].Text = ""
+			fv.FormattedLine[line].Chunks = fv.FormattedLine[line].Chunks[0:0]
 			t.qmlChanged(fv.FormattedLine[line], fv.FormattedLine[line])
 		}
 		return
@@ -148,21 +200,28 @@ func (fv *frontendView) formatLine(line int) {
 	}
 	lastEnd := vr.Begin()
 
+	chunks := make([]lineChunk, 0, len(recipie))
+
 	for _, reg := range recipie {
 		if lastEnd != reg.Region.Begin() {
 			fmt.Fprintf(buf, "<span>%s</span>", fv.bv.Buffer().Substr(Region{lastEnd, reg.Region.Begin()}))
+			chunks = append(chunks, lineChunk{Text: fv.bv.Buffer().Substr(Region{lastEnd, reg.Region.Begin()})})
 		}
 		fmt.Fprintf(buf, "<span style=\"white-space:pre; color:#%s; background:#%s\">%s</span>", htmlcol(reg.Flavour.Foreground), htmlcol(reg.Flavour.Background), fv.bv.Buffer().Substr(reg.Region))
+		chunks = append(chunks, lineChunk{Text: fv.bv.Buffer().Substr(reg.Region), Foreground: htmlcol(reg.Flavour.Foreground), Background: htmlcol(reg.Flavour.Background)})
 		lastEnd = reg.Region.End()
 	}
 	if lastEnd != vr.End() {
 		io.WriteString(buf, fv.bv.Buffer().Substr(Region{lastEnd, vr.End()}))
+		chunks = append(chunks, lineChunk{Text: fv.bv.Buffer().Substr(Region{lastEnd, vr.End()})})
 	}
 
 	str := buf.String()
 
 	if fv.FormattedLine[line].Text != str {
+		fv.FormattedLine[line].RawText = fv.bv.Buffer().Substr(vr)
 		fv.FormattedLine[line].Text = str
+		fv.FormattedLine[line].Chunks = chunks
 		t.qmlChanged(fv.FormattedLine[line], fv.FormattedLine[line])
 	}
 }
