@@ -268,7 +268,7 @@ ApplicationWindow {
                                 id: tab_title
                                 anchors.centerIn: parent
                                 text: styleData.title.replace(/^.*[\\\/]/, '')
-                                color: frontend.defaultFg()
+                                color: "#fff"
                                 anchors.verticalCenterOffset: 1
                             }
                         }
@@ -278,7 +278,7 @@ ApplicationWindow {
                         source: themeFolder + "/tabset-background.png"
                     }
                     tabsMovable: true
-                    frame: Rectangle { color: frontend.defaultBg() }
+                    frame: Rectangle { color: "#fff" }
                     tabOverlap: 5
                 }
 
@@ -289,9 +289,6 @@ ApplicationWindow {
                 minimapVisible: false
                 height: 100
               }
-
-            // }
-
         }
     }
     OpenDialog {

@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 	"runtime"
 	"strings"
 	"sync"
@@ -18,15 +17,9 @@ import (
 	"github.com/limetext/lime-backend/lib"
 	"github.com/limetext/lime-backend/lib/keys"
 	"github.com/limetext/lime-backend/lib/log"
-	"github.com/limetext/lime-backend/lib/render"
 	_ "github.com/limetext/lime-backend/lib/sublime"
-	"github.com/limetext/lime-backend/lib/textmate"
 	"github.com/limetext/lime-backend/lib/util"
 	. "github.com/limetext/text"
-)
-
-var (
-	scheme *textmate.Theme
 )
 
 const (
@@ -131,18 +124,6 @@ func (t *qmlfrontend) qmlChanged(value, field interface{}) {
 	} else {
 		t.qmlDispatch <- qmlDispatch{value, field}
 	}
-}
-
-func (t *qmlfrontend) DefaultBg() color.RGBA {
-	c := scheme.Spice(&render.ViewRegions{})
-	c.Background.A = 0xff
-	return color.RGBA(c.Background)
-}
-
-func (t *qmlfrontend) DefaultFg() color.RGBA {
-	c := scheme.Spice(&render.ViewRegions{})
-	c.Foreground.A = 0xff
-	return color.RGBA(c.Foreground)
 }
 
 // Called when a new view is opened
@@ -338,21 +319,7 @@ func (t *qmlfrontend) loop() (err error) {
 			fw.launch(&wg, component)
 		}
 	})
-
-	// TODO: should be done backend side
-	if sc, err := textmate.LoadTheme("../packages/TextMate-Themes/Monokai.tmTheme"); err != nil {
-		log.Error(err)
-	} else {
-		scheme = sc
-	}
-
 	ed.Init()
-
-	// TODO: setting syntax should be done automaticly in backend and after
-	// implementing this we could run Init in a go routine and remove the
-	// next two line
-	v := ed.ActiveWindow().OpenFile("main.go", 0)
-	v.SetSyntaxFile("../packages/go-tmbundle/Syntaxes/Go.tmLanguage")
 
 	defer func() {
 		fmt.Println(util.Prof)
