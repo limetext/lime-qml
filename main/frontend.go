@@ -57,7 +57,7 @@ func (t *qmlfrontend) Show(v *backend.View, r Region) {
 
 func (t *qmlfrontend) VisibleRegion(v *backend.View) Region {
 	// TODO
-	return Region{0, v.Buffer().Size()}
+	return Region{0, v.Size()}
 }
 
 func (t *qmlfrontend) StatusMessage(msg string) {
@@ -129,10 +129,10 @@ func (t *qmlfrontend) qmlChanged(value, field interface{}) {
 // Called when a new view is opened
 func (t *qmlfrontend) onNew(v *backend.View) {
 	fv := &frontendView{bv: v}
-	v.Buffer().AddObserver(fv)
+	v.AddObserver(fv)
 	v.Settings().AddOnChange("blah", fv.onChange)
 
-	fv.Title.Text = v.Buffer().FileName()
+	fv.Title.Text = v.FileName()
 	if len(fv.Title.Text) == 0 {
 		fv.Title.Text = "untitled"
 	}
@@ -171,7 +171,7 @@ func (t *qmlfrontend) onLoad(v *backend.View) {
 		}
 	}
 	v2 := w2.views[i]
-	v2.Title.Text = v.Buffer().FileName()
+	v2.Title.Text = v.FileName()
 	tabs := w2.window.ObjectByName("tabs")
 	tabs.Set("currentIndex", w2.ActiveViewIndex())
 	tab := tabs.Call("getTab", i).(qml.Object)
@@ -266,8 +266,8 @@ func (t *qmlfrontend) loop() (err error) {
 	ed.LogCommands(false)
 	c := ed.Console()
 	t.Console = &frontendView{bv: c}
-	c.Buffer().AddObserver(t.Console)
-	c.Buffer().AddObserver(t)
+	c.AddObserver(t.Console)
+	c.AddObserver(t)
 
 	ed.AddPackagesPath("shipped", "../packages")
 	ed.AddPackagesPath("default", "../packages/Default")

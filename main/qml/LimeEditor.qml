@@ -257,7 +257,7 @@ Item {
 
                 if (item != null && selection != null) {
                     var col = colFromMouseX(index, mouse.x);
-                    point.r = myView.back().buffer().textPoint(index, col);
+                    point.r = myView.back().textPoint(index, col);
                     if (point.p != null && point.p != point.r) {
                         // Remove the last region and replace it with new one
                         var r = selection.get(selection.len()-1);
@@ -279,7 +279,7 @@ Item {
 
                 if (item != null) {
                     var col = colFromMouseX(index, mouse.x);
-                    point.p = myView.back().buffer().textPoint(index, col)
+                    point.p = myView.back().textPoint(index, col)
 
                     if (!ctrl) {
                         selection.clear();
@@ -298,7 +298,7 @@ Item {
 
                 if (item != null) {
                     var col = colFromMouseX(index, mouse.x);
-                    point.p = myView.back().buffer().textPoint(index, col)
+                    point.p = myView.back().textPoint(index, col)
 
                     if (!ctrl) {
                         getCurrentSelection().clear();
@@ -424,12 +424,12 @@ Item {
                 return;
               }
 
-              var buf = myView.back().buffer();
+              var back = myView.back();
 
               safeSelection = toSafeSelection(selection);
 
-              var first = buf.rowCol(safeSelection.a);
-              var last = buf.rowCol(safeSelection.b);
+              var first = back.rowCol(safeSelection.a);
+              var last = back.rowCol(safeSelection.b);
 
               var firstLine = first[0];
               var lastLine = last[0];
@@ -452,8 +452,7 @@ Item {
                   console.log("Skipping paint");
                   return;
                 }
-                var backend = myView.back(),
-                    buf = backend.buffer();
+                var back = myView.back();
 
                 var ctx = selCanvas.getContext("2d");
 
@@ -463,8 +462,8 @@ Item {
                 var fillColor = "#888888";
                 ctx.fillStyle = outlineColor;
 
-                var first = buf.rowCol(safeSelection.a);
-                var last = buf.rowCol(safeSelection.b);
+                var first = back.rowCol(safeSelection.a);
+                var last = back.rowCol(safeSelection.b);
 
                 var firstLine = first[0];
                 var lastLine = last[0];
@@ -477,7 +476,7 @@ Item {
                 var lastxB = -1;
 
                 if (first[0] == last[0] && first[1] == last[1]) {
-                  var xA = getCursorOffset(first, buf);
+                  var xA = getCursorOffset(first, back);
 
 
                   var caretStyle = myView.setting("caret_style"),
@@ -505,15 +504,15 @@ Item {
                 }
 
                 for(var i = firstLine; i <= lastLine; i++) {
-                  var lr = buf.line(buf.textPoint(i, 0));
+                  var lr = back.line(back.textPoint(i, 0));
                   var a = (i == firstLine)? safeSelection.a : lr.a;
                   var b  = (i == lastLine)? safeSelection.b : lr.b;
 
-                  var rowcolA = buf.rowCol(a);
-                  var rowcolB = buf.rowCol(b);
+                  var rowcolA = back.rowCol(a);
+                  var rowcolB = back.rowCol(b);
 
-                  var xA = getCursorOffset(rowcolA, buf);
-                  var xB = getCursorOffset(rowcolB, buf);
+                  var xA = getCursorOffset(rowcolA, back);
+                  var xB = getCursorOffset(rowcolB, back);
 
                   ctx.fillStyle = fillColor;
                   ctx.fillRect(xA+1, y, xB-xA-1, lh+1);
@@ -545,7 +544,7 @@ Item {
     }
   }
 
-    function toSafeSelection(selection, buf) {
+    function toSafeSelection(selection) {
       return (selection.b > selection.a) ?
                   { a: selection.a, b: selection.b, reversed: false }:
                   { a: selection.b, b: selection.a, reversed: true };

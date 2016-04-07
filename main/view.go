@@ -38,12 +38,10 @@ type lineStruct struct {
 	Measured bool
 }
 
-// func (l *lineStruct) AllChunks() []lineChunk {
-// 	return l.Chunks
-// }
 func (l *lineStruct) ChunksLen() int {
 	return len(l.Chunks)
 }
+
 func (l *lineStruct) Chunk(i int) *lineChunk {
 	return &l.Chunks[i]
 }
@@ -81,9 +79,9 @@ func (fv *frontendView) Region(a int, b int) Region {
 func (fv *frontendView) RegionLines() int {
 	var count int = 0
 	regs := fv.bv.Sel().Regions()
-	if fv.bv.Buffer() != nil {
+	if fv.bv != nil {
 		for _, r := range regs {
-			count += len(fv.bv.Buffer().Lines(r))
+			count += len(fv.bv.Lines(r))
 		}
 	}
 	return count
@@ -105,12 +103,12 @@ func (fv *frontendView) Fix(obj qml.Object) {
 		}
 	})
 
-	if len(fv.FormattedLine) == 0 && fv.bv.Buffer().Size() > 0 {
-		fv.bufferChanged(fv.bv.Buffer(), 0, fv.bv.Buffer().Size())
+	if len(fv.FormattedLine) == 0 && fv.bv.Size() > 0 {
+		fv.bufferChanged(fv.bv, 0, fv.bv.Size())
 		return
 	}
 
-	log.Info("Fix: %v  %v  %v", obj, len(fv.FormattedLine), fv.bv.Buffer().Size())
+	log.Info("Fix: %v  %v  %v", obj, len(fv.FormattedLine), fv.bv.Size())
 
 	for i := range fv.FormattedLine {
 		_ = i
@@ -178,7 +176,7 @@ func (fv *frontendView) formatLine(line int) {
 	prof := util.Prof.Enter("frontendView.formatLine")
 	defer prof.Exit()
 	buf := bytes.NewBuffer(nil)
-	vr := fv.bv.Buffer().Line(fv.bv.Buffer().TextPoint(line, 0))
+	vr := fv.bv.Line(fv.bv.TextPoint(line, 0))
 	for line >= len(fv.FormattedLine) {
 		fv.FormattedLine = append(fv.FormattedLine, &lineStruct{})
 		if fv.qv != nil {
@@ -204,22 +202,22 @@ func (fv *frontendView) formatLine(line int) {
 
 	for _, reg := range recipie {
 		if lastEnd != reg.Region.Begin() {
-			fmt.Fprintf(buf, "<span>%s</span>", fv.bv.Buffer().Substr(Region{lastEnd, reg.Region.Begin()}))
-			chunks = append(chunks, lineChunk{Text: fv.bv.Buffer().Substr(Region{lastEnd, reg.Region.Begin()})})
+			fmt.Fprintf(buf, "<span>%s</span>", fv.bv.Substr(Region{lastEnd, reg.Region.Begin()}))
+			chunks = append(chunks, lineChunk{Text: fv.bv.Substr(Region{lastEnd, reg.Region.Begin()})})
 		}
-		fmt.Fprintf(buf, "<span style=\"white-space:pre; color:#%s; background:#%s\">%s</span>", htmlcol(reg.Flavour.Foreground), htmlcol(reg.Flavour.Background), fv.bv.Buffer().Substr(reg.Region))
-		chunks = append(chunks, lineChunk{Text: fv.bv.Buffer().Substr(reg.Region), Foreground: htmlcol(reg.Flavour.Foreground), Background: htmlcol(reg.Flavour.Background)})
+		fmt.Fprintf(buf, "<span style=\"white-space:pre; color:#%s; background:#%s\">%s</span>", htmlcol(reg.Flavour.Foreground), htmlcol(reg.Flavour.Background), fv.bv.Substr(reg.Region))
+		chunks = append(chunks, lineChunk{Text: fv.bv.Substr(reg.Region), Foreground: htmlcol(reg.Flavour.Foreground), Background: htmlcol(reg.Flavour.Background)})
 		lastEnd = reg.Region.End()
 	}
 	if lastEnd != vr.End() {
-		io.WriteString(buf, fv.bv.Buffer().Substr(Region{lastEnd, vr.End()}))
-		chunks = append(chunks, lineChunk{Text: fv.bv.Buffer().Substr(Region{lastEnd, vr.End()})})
+		io.WriteString(buf, fv.bv.Substr(Region{lastEnd, vr.End()}))
+		chunks = append(chunks, lineChunk{Text: fv.bv.Substr(Region{lastEnd, vr.End()})})
 	}
 
 	str := buf.String()
 
 	if fv.FormattedLine[line].Text != str {
-		fv.FormattedLine[line].RawText = fv.bv.Buffer().Substr(vr)
+		fv.FormattedLine[line].RawText = fv.bv.Substr(vr)
 		fv.FormattedLine[line].Text = str
 		fv.FormattedLine[line].Chunks = chunks
 		t.qmlChanged(fv.FormattedLine[line], fv.FormattedLine[line])
