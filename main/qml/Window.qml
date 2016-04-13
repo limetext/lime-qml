@@ -220,7 +220,7 @@ ApplicationWindow {
     Component {
       id: tabTemplate
 
-      LimeView {}
+      View {}
     }
 
     Item {
@@ -283,7 +283,7 @@ ApplicationWindow {
                 }
 
               }
-              LimeView {
+              View {
                 id: consoleView
                 myView: frontend.console
                 minimapVisible: false

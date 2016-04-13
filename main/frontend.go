@@ -28,8 +28,8 @@ var scheme backend.ColorScheme
 
 const (
 	batching_enabled = true
-	qmlMainFile      = "qml/main.qml"
-	qmlViewFile      = "qml/LimeView.qml"
+	qmlMainFile      = "qml/Window.qml"
+	qmlViewFile      = "qml/View.qml"
 
 	// http://qt-project.org/doc/qt-5.1/qtcore/qt.html#KeyboardModifier-enum
 	shift_mod  = 0x02000000

@@ -45,7 +45,7 @@ Item {
   }
 
   function updateMyView() {
-      console.log("LimeEditor: updateMyView: ", myView);
+      console.log("Buffer: updateMyView: ", myView);
       linesModel.clear();
       if (myView)
         myView.fix(viewRoot);
@@ -58,7 +58,7 @@ Item {
 
   RowLayout {
     anchors.fill: parent
-    LimeEditor {
+    Buffer {
         id: editorView
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -71,7 +71,7 @@ Item {
         cursor: viewRoot.cursor
         ctrl: viewRoot.ctrl
     }
-    LimeMinimap {
+    Minimap {
         id: minimap
         Layout.maximumWidth: 200
         Layout.minimumWidth: 200
