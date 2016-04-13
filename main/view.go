@@ -104,7 +104,7 @@ func (fv *frontendView) Fix(obj qml.Object) {
 	})
 
 	if len(fv.FormattedLine) == 0 && fv.bv.Size() > 0 {
-		fv.bufferChanged(fv.bv, 0, fv.bv.Size())
+		fv.bufferChanged(0, fv.bv.Size())
 		return
 	}
 
@@ -116,7 +116,7 @@ func (fv *frontendView) Fix(obj qml.Object) {
 	}
 }
 
-func (fv *frontendView) bufferChanged(buf Buffer, pos, delta int) {
+func (fv *frontendView) bufferChanged(pos, delta int) {
 	prof := util.Prof.Enter("frontendView.bufferChanged")
 	defer prof.Exit()
 
@@ -127,15 +127,15 @@ func (fv *frontendView) bufferChanged(buf Buffer, pos, delta int) {
 		}
 	}()
 
-	row1, _ := buf.RowCol(pos)
-	row2, _ := buf.RowCol(pos + delta)
+	row1, _ := fv.bv.RowCol(pos)
+	row2, _ := fv.bv.RowCol(pos + delta)
 	if row1 > row2 {
 		row1, row2 = row2, row1
 	}
 
 	if delta > 0 && fv.qv != nil {
 		r1 := row1
-		if add := strings.Count(buf.Substr(Region{pos, pos + delta}), "\n"); add > 0 {
+		if add := strings.Count(fv.bv.Substr(Region{pos, pos + delta}), "\n"); add > 0 {
 			nn := make([]*lineStruct, len(fv.FormattedLine)+add)
 			copy(nn, fv.FormattedLine[:r1])
 			copy(nn[r1+add:], fv.FormattedLine[r1:])
@@ -155,11 +155,11 @@ func (fv *frontendView) bufferChanged(buf Buffer, pos, delta int) {
 }
 
 func (fv *frontendView) Erased(changed_buffer Buffer, region_removed Region, data_removed []rune) {
-	fv.bufferChanged(changed_buffer, region_removed.B, region_removed.A-region_removed.B)
+	fv.bufferChanged(region_removed.B, region_removed.A-region_removed.B)
 }
 
 func (fv *frontendView) Inserted(changed_buffer Buffer, region_inserted Region, data_inserted []rune) {
-	fv.bufferChanged(changed_buffer, region_inserted.A, region_inserted.B-region_inserted.A)
+	fv.bufferChanged(region_inserted.A, region_inserted.B-region_inserted.A)
 }
 
 func (fv *frontendView) onChange(name string) {

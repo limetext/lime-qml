@@ -29,7 +29,7 @@ Item {
   }
 
   Rectangle  {
-      color: "#fff"
+      color: frontend.defaultBg()
       anchors.fill: parent
       z: -1
   }

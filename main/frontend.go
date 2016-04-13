@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"runtime"
 	"strings"
 	"sync"
@@ -17,10 +18,13 @@ import (
 	"github.com/limetext/lime-backend/lib"
 	"github.com/limetext/lime-backend/lib/keys"
 	"github.com/limetext/lime-backend/lib/log"
+	"github.com/limetext/lime-backend/lib/render"
 	_ "github.com/limetext/lime-backend/lib/sublime"
 	"github.com/limetext/lime-backend/lib/util"
 	. "github.com/limetext/text"
 )
+
+var scheme backend.ColorScheme
 
 const (
 	batching_enabled = true
@@ -124,6 +128,18 @@ func (t *qmlfrontend) qmlChanged(value, field interface{}) {
 	} else {
 		t.qmlDispatch <- qmlDispatch{value, field}
 	}
+}
+
+func (t *qmlfrontend) DefaultBg() color.RGBA {
+	c := scheme.Spice(&render.ViewRegions{})
+	c.Background.A = 0xff
+	return color.RGBA(c.Background)
+}
+
+func (t *qmlfrontend) DefaultFg() color.RGBA {
+	c := scheme.Spice(&render.ViewRegions{})
+	c.Foreground.A = 0xff
+	return color.RGBA(c.Foreground)
 }
 
 // Called when a new view is opened
@@ -255,12 +271,30 @@ func (t *qmlfrontend) Quit() (err error) {
 }
 
 func (t *qmlfrontend) loop() (err error) {
+	var (
+		engine    *qml.Engine
+		component qml.Object
+		// WaitGroup keeping track of open windows
+		wg sync.WaitGroup
+	)
+
 	backend.OnNew.Add(t.onNew)
 	backend.OnClose.Add(t.onClose)
 	backend.OnLoad.Add(t.onLoad)
 	backend.OnSelectionModified.Add(t.onSelectionModified)
+	backend.OnNewWindow.Add(func(w *backend.Window) {
+		fw := &frontendWindow{bw: w}
+		t.windows[w] = fw
+		if component != nil {
+			fw.launch(&wg, component)
+		}
+	})
 
 	ed := backend.GetEditor()
+	ed.Init()
+	ed.AddPackagesPath("shipped", "../packages")
+	ed.AddPackagesPath("default", "../packages/Default")
+	ed.AddPackagesPath("user", "../packages/User")
 	ed.SetFrontend(t)
 	ed.LogInput(false)
 	ed.LogCommands(false)
@@ -269,16 +303,7 @@ func (t *qmlfrontend) loop() (err error) {
 	c.AddObserver(t.Console)
 	c.AddObserver(t)
 
-	ed.AddPackagesPath("shipped", "../packages")
-	ed.AddPackagesPath("default", "../packages/Default")
-	ed.AddPackagesPath("user", "../packages/User")
-
-	var (
-		engine    *qml.Engine
-		component qml.Object
-		// WaitGroup keeping track of open windows
-		wg sync.WaitGroup
-	)
+	scheme = ed.GetColorScheme(ed.Settings().Get("color_scheme", "").(string))
 
 	// create and setup a new engine, destroying
 	// the old one if one exists.
@@ -312,14 +337,8 @@ func (t *qmlfrontend) loop() (err error) {
 		log.Error(err)
 	}
 
-	backend.OnNewWindow.Add(func(w *backend.Window) {
-		fw := &frontendWindow{bw: w}
-		t.windows[w] = fw
-		if component != nil {
-			fw.launch(&wg, component)
-		}
-	})
-	ed.Init()
+	w := ed.NewWindow()
+	w.OpenFile("main.go", 0)
 
 	defer func() {
 		fmt.Println(util.Prof)
