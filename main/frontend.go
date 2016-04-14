@@ -19,16 +19,15 @@ import (
 	"github.com/limetext/lime-backend/lib/keys"
 	"github.com/limetext/lime-backend/lib/log"
 	"github.com/limetext/lime-backend/lib/render"
-	_ "github.com/limetext/lime-backend/lib/sublime"
-	"github.com/limetext/lime-backend/lib/util"
 	. "github.com/limetext/text"
+	"github.com/limetext/util"
 )
 
 var scheme backend.ColorScheme
 
 const (
 	batching_enabled = true
-	qmlMainFile      = "qml/Window.qml"
+	qmlWindowFile    = "qml/Window.qml"
 	qmlViewFile      = "qml/View.qml"
 
 	// http://qt-project.org/doc/qt-5.1/qtcore/qt.html#KeyboardModifier-enum
@@ -327,10 +326,7 @@ func (t *qmlfrontend) loop() (err error) {
 		engine.Context().SetVar("editor", backend.GetEditor())
 
 		log.Debug("loadfile")
-		component, err = engine.LoadFile(qmlMainFile)
-		if err != nil {
-			return err
-		}
+		component, err = engine.LoadFile(qmlWindowFile)
 		return
 	}
 	if err := newEngine(); err != nil {

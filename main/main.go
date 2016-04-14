@@ -10,10 +10,11 @@ import (
 
 	"gopkg.in/qml.v1"
 
+	_ "github.com/limetext/commands"
 	"github.com/limetext/gopy/lib"
 	"github.com/limetext/lime-backend/lib"
-	_ "github.com/limetext/lime-backend/lib/commands"
 	"github.com/limetext/lime-backend/lib/log"
+	_ "github.com/limetext/sublime"
 )
 
 const (

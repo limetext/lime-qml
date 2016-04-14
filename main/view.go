@@ -15,8 +15,8 @@ import (
 	"github.com/limetext/lime-backend/lib"
 	"github.com/limetext/lime-backend/lib/log"
 	"github.com/limetext/lime-backend/lib/render"
-	"github.com/limetext/lime-backend/lib/util"
 	. "github.com/limetext/text"
+	"github.com/limetext/util"
 )
 
 // A helper glue structure connecting the backend View with the qml code that
