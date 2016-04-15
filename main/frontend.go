@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/fsnotify.v0"
+	"gopkg.in/fsnotify.v1"
 	"gopkg.in/qml.v1"
 
 	"github.com/limetext/lime-backend/lib"
@@ -375,8 +375,8 @@ func (t *qmlfrontend) loop() (err error) {
 		return
 	}
 	defer watch.Close()
-	watch.Watch("qml")
-	defer watch.RemoveWatch("qml")
+	watch.Add("qml")
+	defer watch.Remove("qml")
 
 	reloadRequested := false
 	waiting := false
@@ -389,8 +389,8 @@ func (t *qmlfrontend) loop() (err error) {
 			time.Sleep(1 * time.Second) // quitting too frequently causes crashes
 
 			select {
-			case ev := <-watch.Event:
-				if ev != nil && strings.HasSuffix(ev.Name, ".qml") && ev.IsModify() && !ev.IsAttrib() && !reloadRequested && waiting {
+			case ev := <-watch.Events:
+				if strings.HasSuffix(ev.Name, ".qml") && ev.Op == fsnotify.Write && ev.Op != fsnotify.Chmod && !reloadRequested && waiting {
 					reloadRequested = true
 					t.Quit()
 				}
