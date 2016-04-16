@@ -27,6 +27,10 @@ imports:
   version: 06ae8177eb526ccd7877df1d16909b4e48b75e0f
 - name: github.com/limetext/util
   version: 20e1a4a3505f50a45c7f92456d889d899272ac14
+- name: github.com/limetext/loaders
+  version: 476e7b192526e3b2cc4302f78ab167eca21279c9
+- name: github.com/limetext/commands
+  version: 5a56ddda8d63334ba9e3fded3827e0575ffafd17
 - name: github.com/limetext/sublime
   version: e42753b644035b628909703d84e4c0d5d3e26051
 - name: github.com/quarnster/parser
