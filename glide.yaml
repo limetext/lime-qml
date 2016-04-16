@@ -11,11 +11,10 @@ import:
   - lib/log
   - lib/render
   - lib/sublime
-  - lib/textmate
-  - lib/util
 - package: github.com/limetext/text
+- package: github.com/limetext/sublime
+- package: github.com/limetext/util
 - package: gopkg.in/fsnotify.v0
 - package: gopkg.in/qml.v1
 excludeDirs:
-- tasks
 - packages
