@@ -23,8 +23,6 @@ import (
 	"github.com/limetext/util"
 )
 
-var scheme backend.ColorScheme
-
 const (
 	batching_enabled = true
 	qmlWindowFile    = "qml/Window.qml"
@@ -130,13 +128,13 @@ func (t *qmlfrontend) qmlChanged(value, field interface{}) {
 }
 
 func (t *qmlfrontend) DefaultBg() color.RGBA {
-	c := scheme.Spice(&render.ViewRegions{})
+	c := t.ColorScheme().Spice(&render.ViewRegions{})
 	c.Background.A = 0xff
 	return color.RGBA(c.Background)
 }
 
 func (t *qmlfrontend) DefaultFg() color.RGBA {
-	c := scheme.Spice(&render.ViewRegions{})
+	c := t.ColorScheme().Spice(&render.ViewRegions{})
 	c.Foreground.A = 0xff
 	return color.RGBA(c.Foreground)
 }
@@ -256,6 +254,11 @@ func (t *qmlfrontend) HandleInput(text string, keycode int, modifiers int) bool 
 	return false
 }
 
+func (t *qmlfrontend) ColorScheme() backend.ColorScheme {
+	ed := backend.GetEditor()
+	return ed.GetColorScheme(ed.Settings().Get("color_scheme", "").(string))
+}
+
 // Quit closes all open windows to de-reference all qml objects
 func (t *qmlfrontend) Quit() (err error) {
 	// todo: handle changed files that aren't saved.
@@ -270,39 +273,38 @@ func (t *qmlfrontend) Quit() (err error) {
 }
 
 func (t *qmlfrontend) loop() (err error) {
+	ed := backend.GetEditor()
+	// TODO: As InitCallback doc says initiation code to be deferred until
+	// after the UI is up and running. but because we dont have any
+	// scheme we are initing editor before the UI comes up.
+	ed.Init()
+
+	// Some packages(e.g Vintageos) need available window and view at start
+	// so we need at least one window and view(event empty) before loading
+	// packages. Sublime text also has available window view on startup
+	w := ed.NewWindow()
+	// TODO: we should open empty file but due qml package error we can't
+	// open any file from the qml frontend for now
+	v := w.OpenFile("main.go", 0)
+	ed.AddPackagesPath("shipped", "../packages")
+	ed.AddPackagesPath("default", "../packages/Default")
+	ed.AddPackagesPath("user", "../packages/User")
+
+	ed.SetFrontend(t)
+	ed.LogInput(false)
+	ed.LogCommands(false)
+
+	c := ed.Console()
+	t.Console = &frontendView{bv: c}
+	c.AddObserver(t.Console)
+	c.AddObserver(t)
+
 	var (
 		engine    *qml.Engine
 		component qml.Object
 		// WaitGroup keeping track of open windows
 		wg sync.WaitGroup
 	)
-
-	backend.OnNew.Add(t.onNew)
-	backend.OnClose.Add(t.onClose)
-	backend.OnLoad.Add(t.onLoad)
-	backend.OnSelectionModified.Add(t.onSelectionModified)
-	backend.OnNewWindow.Add(func(w *backend.Window) {
-		fw := &frontendWindow{bw: w}
-		t.windows[w] = fw
-		if component != nil {
-			fw.launch(&wg, component)
-		}
-	})
-
-	ed := backend.GetEditor()
-	ed.Init()
-	ed.AddPackagesPath("shipped", "../packages")
-	ed.AddPackagesPath("default", "../packages/Default")
-	ed.AddPackagesPath("user", "../packages/User")
-	ed.SetFrontend(t)
-	ed.LogInput(false)
-	ed.LogCommands(false)
-	c := ed.Console()
-	t.Console = &frontendView{bv: c}
-	c.AddObserver(t.Console)
-	c.AddObserver(t)
-
-	scheme = ed.GetColorScheme(ed.Settings().Get("color_scheme", "").(string))
 
 	// create and setup a new engine, destroying
 	// the old one if one exists.
@@ -333,8 +335,33 @@ func (t *qmlfrontend) loop() (err error) {
 		log.Error(err)
 	}
 
-	w := ed.NewWindow()
-	w.OpenFile("main.go", 0)
+	addWindow := func(w *backend.Window) {
+		fw := &frontendWindow{bw: w}
+		t.windows[w] = fw
+		if component != nil {
+			fw.launch(&wg, component)
+		}
+	}
+
+	backend.OnNew.Add(t.onNew)
+	backend.OnClose.Add(t.onClose)
+	backend.OnLoad.Add(t.onLoad)
+	backend.OnSelectionModified.Add(t.onSelectionModified)
+	backend.OnNewWindow.Add(addWindow)
+
+	// we need to add windows and views that are added before we registered
+	// actions for OnNewWindow, OnNew, ... events
+	for _, w := range ed.Windows() {
+		addWindow(w)
+		for _, v := range w.Views() {
+			t.onNew(v)
+			t.onLoad(v)
+		}
+	}
+
+	// also because we are openning a file now we need to set the syntax
+	// manually here
+	v.Settings().Set("syntax", "../packages/go-tmbundle/Syntaxes/Go.tmLanguage")
 
 	defer func() {
 		fmt.Println(util.Prof)

@@ -5,9 +5,10 @@
 package main
 
 import (
+	"sync"
+
 	"github.com/limetext/lime-backend/lib/log"
 	"gopkg.in/qml.v1"
-	"sync"
 )
 
 type (
