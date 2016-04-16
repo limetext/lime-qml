@@ -32,4 +32,5 @@ else ifeq ($(TRAVIS_OS_NAME),osx)
 	brew link --force qt5
 endif
 
+travis_test: export PKG_CONFIG_PATH += $(PWD)/vendor/github.com/limetext/rubex:$(GOPATH)/src/github.com/limetext/rubex
 travis_test: test
