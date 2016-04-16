@@ -33,4 +33,4 @@ else ifeq ($(TRAVIS_OS_NAME),osx)
 endif
 
 travis_test: export PKG_CONFIG_PATH += $(PWD)/vendor/github.com/limetext/rubex:$(GOPATH)/src/github.com/limetext/rubex
-travis_test: test
+travis_test: test build

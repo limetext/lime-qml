@@ -36,7 +36,6 @@ install:
 
 script:
   - make travis_test
-  - make build
   - make check_fmt check_license
 
 notifications:
