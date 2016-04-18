@@ -30,6 +30,9 @@ addons:
       - python3.5
       - python3.5-dev
       - qtdeclarative5-private-dev
+      - qtbase5-private-dev
+      - libqt5opengl5
+      - libqt5opengl5-dev
 
 install:
   - make travis glide

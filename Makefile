@@ -24,9 +24,7 @@ glide:
 	glide install
 
 travis:
-ifeq ($(TRAVIS_OS_NAME),linux)
-	sudo apt-get -qy install qtbase5-private-dev libqt5opengl5 libqt5opengl5-dev
-else ifeq ($(TRAVIS_OS_NAME),osx)
+ifeq ($(TRAVIS_OS_NAME),osx)
 	brew update
 	brew install oniguruma python3 qt5
 	brew link --force qt5
