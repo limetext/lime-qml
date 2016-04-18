@@ -5,7 +5,7 @@
 package main
 
 import (
-	"github.com/limetext/lime-backend/lib/keys"
+	"github.com/limetext/backend/keys"
 )
 
 // http://qt-project.org/doc/qt-5.1/qtcore/qt.html#Key-enum

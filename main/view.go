@@ -12,9 +12,9 @@ import (
 
 	"gopkg.in/qml.v1"
 
-	"github.com/limetext/lime-backend/lib"
-	"github.com/limetext/lime-backend/lib/log"
-	"github.com/limetext/lime-backend/lib/render"
+	"github.com/limetext/backend"
+	"github.com/limetext/backend/log"
+	"github.com/limetext/backend/render"
 	. "github.com/limetext/text"
 	"github.com/limetext/util"
 )
