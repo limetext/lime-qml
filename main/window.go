@@ -5,9 +5,10 @@
 package main
 
 import (
-	"github.com/limetext/lime-backend/lib"
-	"gopkg.in/qml.v1"
 	"sync"
+
+	"github.com/limetext/backend"
+	"gopkg.in/qml.v1"
 )
 
 // A helper glue structure connecting the backend Window with the qml.Window

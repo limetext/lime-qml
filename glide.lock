@@ -3,13 +3,11 @@ updated: 2016-04-16T12:14:08.370620448-06:00
 imports:
 - name: github.com/atotto/clipboard
   version: bb272b845f1112e10117e3e45ce39f690c0001ad
-- name: github.com/limetext/commands
-  version: 5a56ddda8d63334ba9e3fded3827e0575ffafd17
 - name: github.com/limetext/gopy
   version: 8cc843c758cf7f5dc883775cc6ce1bcaf9806e62
   subpackages:
   - lib
-- name: github.com/limetext/lime-backend
+- name: github.com/limetext/backend
   version: 8debd7a72f6a4ed9762ecdef753398e253f5a36c
   subpackages:
   - lib
@@ -19,11 +17,8 @@ imports:
   - lib/packages
   - lib/parser
   - lib/watch
-- name: github.com/limetext/loaders
-  version: 476e7b192526e3b2cc4302f78ab167eca21279c9
-  subpackages:
-  - json
-  - plist
+- name: github.com/limetext/commands
+  version: 5a56ddda8d63334ba9e3fded3827e0575ffafd17
 - name: github.com/limetext/log4go
   version: 2aba105a605a9ebe476f35d7610704e4e723d4ab
 - name: github.com/limetext/rubex
@@ -36,6 +31,12 @@ imports:
   version: 06ae8177eb526ccd7877df1d16909b4e48b75e0f
 - name: github.com/limetext/util
   version: 20e1a4a3505f50a45c7f92456d889d899272ac14
+- name: github.com/limetext/loaders
+  version: 476e7b192526e3b2cc4302f78ab167eca21279c9
+- name: github.com/limetext/commands
+  version: 5a56ddda8d63334ba9e3fded3827e0575ffafd17
+- name: github.com/limetext/sublime
+  version: e42753b644035b628909703d84e4c0d5d3e26051
 - name: github.com/quarnster/parser
   version: 8991807ce6d383a41077a642b7b381eba1df7064
 - name: gopkg.in/fsnotify.v1
