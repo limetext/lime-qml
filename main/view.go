@@ -191,7 +191,7 @@ func (fv *frontendView) formatLine(line int) {
 		}
 		return
 	}
-	recipie := fv.bv.Transform(scheme, vr).Transcribe()
+	recipie := fv.bv.Transform(vr).Transcribe()
 	highlight_line := false
 	if b, ok := fv.bv.Settings().Get("highlight_line", highlight_line).(bool); ok {
 		highlight_line = b

@@ -6,17 +6,16 @@ import:
 - package: github.com/limetext/backend
   subpackages:
   - lib
-  - lib/commands
   - lib/keys
   - lib/log
   - lib/render
-  - lib/sublime
+- package: github.com/limetext/commands
 - package: github.com/limetext/text
 - package: github.com/limetext/sublime
 - package: github.com/limetext/util
 - package: github.com/limetext/commands
 - package: github.com/limetext/loaders
-- package: gopkg.in/fsnotify.v0
+- package: gopkg.in/fsnotify.v1
 - package: gopkg.in/qml.v1
 excludeDirs:
 - packages
