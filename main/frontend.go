@@ -278,6 +278,8 @@ func (t *qmlfrontend) loop() (err error) {
 	// after the UI is up and running. but because we dont have any
 	// scheme we are initing editor before the UI comes up.
 	ed.Init()
+	ed.SetDefaultPath("../packages/Default")
+	ed.SetUserPath("../packages/User")
 
 	// Some packages(e.g Vintageos) need available window and view at start
 	// so we need at least one window and view(event empty) before loading
@@ -286,9 +288,7 @@ func (t *qmlfrontend) loop() (err error) {
 	// TODO: we should open empty file but due qml package error we can't
 	// open any file from the qml frontend for now
 	v := w.OpenFile("main.go", 0)
-	ed.AddPackagesPath("shipped", "../packages")
-	ed.AddPackagesPath("default", "../packages/Default")
-	ed.AddPackagesPath("user", "../packages/User")
+	ed.AddPackagesPath("../packages")
 
 	ed.SetFrontend(t)
 	ed.LogInput(false)
