@@ -1,16 +1,21 @@
 package: github.com/limetext/lime-qml
 import:
 - package: github.com/limetext/backend
+  version: master
   subpackages:
   - keys
   - log
   - render
 - package: github.com/limetext/commands
+  version: master
 - package: github.com/limetext/gopy
   subpackages:
   - lib
 - package: github.com/limetext/sublime
+  version: master
 - package: github.com/limetext/text
+  version: master
 - package: github.com/limetext/util
+  version: master
 - package: gopkg.in/fsnotify.v1
 - package: gopkg.in/qml.v1

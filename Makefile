@@ -1,5 +1,3 @@
-default: test
-
 test:
 	@go test -race ./main/...
 build:

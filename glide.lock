@@ -1,10 +1,14 @@
-hash: 403f8506a367b1971e6a053073f11e3e4736d7a35f44a638a733ac37eb2c4765
-updated: 2016-04-18T12:53:10.768264307+04:30
+hash: 64064aad1ac9dc878fe6889105c34a6a757da3216c51f22a22a6f3830716c394
+updated: 2016-04-21T13:20:41.027441176+04:30
 imports:
 - name: github.com/atotto/clipboard
   version: bb272b845f1112e10117e3e45ce39f690c0001ad
+- name: github.com/going/toolkit
+  version: 5bff591dc40da25dcc875d3fa1a3373d74d45411
+  subpackages:
+  - log
 - name: github.com/limetext/backend
-  version: 72d8a70cfe64ccfa3195a393cee6ca012f434c92
+  version: 8c28e589f7a7fa7ab7cfc9e9e1403220469cd33d
   subpackages:
   - keys
   - log
@@ -28,9 +32,12 @@ imports:
 - name: github.com/limetext/rubex
   version: 3fc130e580797e3d9c6fdab36e6a961141f9fd5f
 - name: github.com/limetext/sublime
-  version: 67ff913da8dec021d4f252d1df4e4dae4ac11217
+  version: a438429799df2c018e7fdc34bfb788032e7626fa
   subpackages:
   - api
+  - internal/textmate/language
+  - internal/textmate/theme
+  - internal/textmate
 - name: github.com/limetext/text
   version: 06ae8177eb526ccd7877df1d16909b4e48b75e0f
 - name: github.com/limetext/util
