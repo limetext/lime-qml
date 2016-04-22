@@ -206,6 +206,21 @@ func (t *qmlfrontend) onSelectionModified(v *backend.View) {
 	v2.qv.Call("onSelectionModified")
 }
 
+func (t *qmlfrontend) onStatusChanged(v *backend.View) {
+	w2 := t.windows[v.Window()]
+	i := 0
+	for i = range w2.views {
+		if w2.views[i].bv == v {
+			break
+		}
+	}
+	v2 := w2.views[i]
+	if v2.qv == nil {
+		return
+	}
+	v2.qv.Call("onStatusChanged")
+}
+
 // Launches the provided command in a new goroutine
 // (to avoid locking up the GUI)
 func (t *qmlfrontend) RunCommand(command string) {
@@ -348,6 +363,7 @@ func (t *qmlfrontend) loop() (err error) {
 	backend.OnLoad.Add(t.onLoad)
 	backend.OnSelectionModified.Add(t.onSelectionModified)
 	backend.OnNewWindow.Add(addWindow)
+	backend.OnStatusChanged.Add(t.onStatusChanged)
 
 	// we need to add windows and views that are added before we registered
 	// actions for OnNewWindow, OnNew, ... events

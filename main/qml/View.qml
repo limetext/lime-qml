@@ -16,6 +16,8 @@ Item {
   property bool ctrl: false
   property bool minimapVisible: true
 
+  property var statusBar: {}
+
 
   property var linesModel: ListModel {}
 
@@ -54,6 +56,12 @@ Item {
   function onSelectionModified() {
       if (myView == undefined) return;
       editorView.onSelectionModified();
+  }
+
+  function onStatusChanged() {
+    if (myView == undefined) return;
+    var bv = myView.back();
+    statusBar = bv.status();
   }
 
   RowLayout {

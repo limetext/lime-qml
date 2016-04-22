@@ -178,6 +178,27 @@ ApplicationWindow {
         }
     }
 
+    property Tab currentTab: tabs.count == 0? null : tabs.getTab(tabs.currentIndex)
+    property var statusBarMap: currentTab == null || currentTab.item == null ? null : tabs.getTab(tabs.currentIndex).item.statusBar
+    property var statusBarSorted: []
+    onStatusBarMapChanged: {
+      if (statusBarMap == null) {
+        statusBarSorted = [];
+        return;
+      }
+
+      console.log("status bar map:", statusBarMap);
+      var keys = Object.keys(statusBarMap);
+      keys.sort();
+      console.log("status bar keys:", keys);
+      var sorted = [];
+      for (var i = 0; i < keys.length; i++)
+        sorted.push(statusBarMap[keys[i]]);
+
+      statusBarSorted = sorted;
+    }
+
+
     statusBar: StatusBar {
         id: statusBar
         style: StatusBarStyle {
@@ -196,7 +217,15 @@ ApplicationWindow {
             RowLayout {
                 anchors.fill: parent
                 spacing: 3
+                Repeater {
+                  model: statusBarSorted
+                  delegate:
+                    Label {
+                        text: modelData
+                        color: statusBar.textColor
+                    }
 
+                }
                 Label {
                     text: "git branch: master"
                     color: statusBar.textColor
