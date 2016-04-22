@@ -165,7 +165,7 @@ func (t *qmlfrontend) onClose(v *backend.View) {
 	w2 := t.windows[v.Window()]
 	for i := range w2.views {
 		if w2.views[i].bv == v {
-			w2.window.ObjectByName("tabs").Call("removeTab", i)
+			w2.window.Call("removeTab", i)
 			copy(w2.views[i:], w2.views[i+1:])
 			w2.views = w2.views[:len(w2.views)-1]
 			return
@@ -185,10 +185,10 @@ func (t *qmlfrontend) onLoad(v *backend.View) {
 	}
 	v2 := w2.views[i]
 	v2.Title.Text = v.FileName()
-	tabs := w2.window.ObjectByName("tabs")
-	tabs.Set("currentIndex", w2.ActiveViewIndex())
-	tab := tabs.Call("getTab", i).(qml.Object)
-	tab.Set("title", v2.Title.Text)
+	if w2.window != nil {
+		w2.window.Call("activateTab", w2.ActiveViewIndex())
+		w2.window.Call("setTabTitle", i, v2.Title.Text)
+	}
 }
 
 func (t *qmlfrontend) onSelectionModified(v *backend.View) {

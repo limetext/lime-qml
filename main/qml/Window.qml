@@ -23,7 +23,7 @@ ApplicationWindow {
 
     function addTab(title, view) {
       var tab = tabs.addTab(title, tabTemplate);
-      console.log("tab", tab, tab.item);
+      console.log("addTab", tab, tab.item);
 
       var loadTab = function() {
         tab.item.myView = view;
@@ -34,6 +34,19 @@ ApplicationWindow {
       } else {
         tab.loaded.connect(loadTab);
       }
+      tab.active = true;
+    }
+
+    function activateTab(tabIndex) {
+      tabs.currentIndex = tabIndex;
+    }
+
+    function removeTab(tabIndex) {
+      tabs.removeTab(tabIndex);
+    }
+
+    function setTabTitle(tabIndex, title) {
+      tabs.getTab(tabIndex).title = title;
     }
 
     menuBar: MenuBar {
