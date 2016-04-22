@@ -385,14 +385,21 @@ func (t *qmlfrontend) loop() (err error) {
 		// reloadRequested = true
 		// t.Quit()
 
+		lastTime := time.Now()
+
 		for {
-			time.Sleep(1 * time.Second) // quitting too frequently causes crashes
 
 			select {
 			case ev := <-watch.Events:
+				if time.Now().Sub(lastTime) < 1*time.Second {
+					// quitting too frequently causes crashes
+					lastTime = time.Now()
+					continue
+				}
 				if strings.HasSuffix(ev.Name, ".qml") && ev.Op == fsnotify.Write && ev.Op != fsnotify.Chmod && !reloadRequested && waiting {
 					reloadRequested = true
 					t.Quit()
+					lastTime = time.Now()
 				}
 			}
 		}
