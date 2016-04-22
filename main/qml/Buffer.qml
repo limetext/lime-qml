@@ -135,6 +135,7 @@ Item {
 
               property string lineNumberText: index+1
             }
+
             Canvas {
               id: canvas
               property var line: myView && index > -1 ? myView.line(index) : null
@@ -159,11 +160,14 @@ Item {
                 var l = line;
                 if (l == null) return;
 
+                var startTime = new Date().getTime();
+
                 var drawTabs = false;
 
                 var tabWidth = editorRoot.tabWidth;
 
                 var ctx = canvas.getContext("2d");
+                ctx.reset();
 
                 ctx.font = editorFont;
 
@@ -212,6 +216,12 @@ Item {
                 }
 
                 l.width = x;
+
+                var endTime = new Date().getTime();
+
+                var duration = endTime - startTime;
+                // console.log("Paint took", duration);
+                reportPaint(duration);
               }
             }
           }
@@ -668,6 +678,31 @@ Item {
         return partialWidth + cursorOffset;
 
     }
+
+    property int numPaints: 0
+    property real totalDuration: 0
+
+    function reportPaint(duration) {
+      numPaints += 1;
+      totalDuration += duration;
+
+      // paintTimer.running = true;
+    }
+
+    // Timer {
+    //   id: paintTimer
+    //     interval: 100
+    //     repeat: false
+    //     running: false
+    //     onTriggered: {
+    //         if (numPaints == 0) return;
+    //
+    //         console.log("Paints", numPaints, "in the last", interval, ", total", totalDuration, "average", totalDuration / numPaints);
+    //
+    //         numPaints = 0;
+    //         totalDuration = 0;
+    //     }
+    // }
 
 
     function resetBlink() {
