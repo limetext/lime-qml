@@ -1,14 +1,10 @@
-hash: 64064aad1ac9dc878fe6889105c34a6a757da3216c51f22a22a6f3830716c394
-updated: 2016-04-21T13:20:41.027441176+04:30
+hash: fe0e45f73152cf9d9987176767f355da592380357103e2e83e795662a3c51a1d
+updated: 2016-04-22T17:02:36.157936697-06:00
 imports:
 - name: github.com/atotto/clipboard
   version: bb272b845f1112e10117e3e45ce39f690c0001ad
-- name: github.com/going/toolkit
-  version: 5bff591dc40da25dcc875d3fa1a3373d74d45411
-  subpackages:
-  - log
 - name: github.com/limetext/backend
-  version: 8c28e589f7a7fa7ab7cfc9e9e1403220469cd33d
+  version: a4329b627e9da2688ed9bdbd3c3c3bf093ba7908
   subpackages:
   - keys
   - log
@@ -28,11 +24,11 @@ imports:
   - json
   - plist
 - name: github.com/limetext/log4go
-  version: 41f52bba2191d3bfa764c6867968eb06acbd8f3c
+  version: 2aba105a605a9ebe476f35d7610704e4e723d4ab
 - name: github.com/limetext/rubex
   version: 3fc130e580797e3d9c6fdab36e6a961141f9fd5f
 - name: github.com/limetext/sublime
-  version: a438429799df2c018e7fdc34bfb788032e7626fa
+  version: 1c2ac5c1f7a2524ea8307be0590864a23b691a23
   subpackages:
   - api
   - internal/textmate/language
