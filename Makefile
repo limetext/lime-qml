@@ -5,7 +5,7 @@ build:
 fmt:
 	@go fmt ./main/...
 license:
-	@go run gen_license.go main
+	@go run $(GOPATH)/src/github.com/limetext/tasks/gen_license.go -scan=main
 
 check_fmt:
 ifneq ($(shell gofmt -l main),)
@@ -13,15 +13,15 @@ ifneq ($(shell gofmt -l main),)
 endif
 
 check_license:
-ifneq ($(shell go run gen_license.go main),)
-	$(error license is not added to all files, run make license)
-endif
+	@go run $(GOPATH)/src/github.com/limetext/tasks/gen_license.go -scan=main -check
 
+tasks:
+	go get -d -u github.com/limetext/tasks
 glide:
 	go get -v -u github.com/Masterminds/glide
 	glide install
 
-travis:
+travis: tasks
 ifeq ($(TRAVIS_OS_NAME),osx)
 	brew update
 	brew install oniguruma python3 qt5

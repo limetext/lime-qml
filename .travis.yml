@@ -35,7 +35,7 @@ addons:
       - libqt5opengl5-dev
 
 install:
-  - make travis glide
+  - make travis glide tasks
 
 script:
   - make travis_test
