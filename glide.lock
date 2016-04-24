@@ -42,8 +42,8 @@ imports:
   version: 8991807ce6d383a41077a642b7b381eba1df7064
 - name: gopkg.in/fsnotify.v1
   version: 836bfd95fecc0f1511dd66bdbf2b5b61ab8b00b6
-- name: gopkg.in/qml.v1
-  version: 2ee7e5ff737026a4dfa89801fac63561279040f4
+- name: github.com/limetext/qml-go
+  version: 71e9cf92e2e8c50dc17e5b1bcb4b8f4916dce904
   subpackages:
   - cdata
   - gl/glbase

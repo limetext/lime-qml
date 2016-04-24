@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/limetext/qml-go"
 	"gopkg.in/fsnotify.v1"
-	"gopkg.in/qml.v1"
 
 	"github.com/limetext/backend"
 	"github.com/limetext/backend/keys"

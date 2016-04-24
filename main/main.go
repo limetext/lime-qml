@@ -8,12 +8,11 @@ import (
 	"flag"
 	"runtime"
 
-	"gopkg.in/qml.v1"
-
 	"github.com/limetext/backend"
 	"github.com/limetext/backend/log"
 	_ "github.com/limetext/commands"
 	"github.com/limetext/gopy/lib"
+	"github.com/limetext/qml-go"
 	_ "github.com/limetext/sublime"
 )
 

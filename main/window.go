@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/limetext/backend"
-	"gopkg.in/qml.v1"
+	"github.com/limetext/qml-go"
 )
 
 // A helper glue structure connecting the backend Window with the qml.Window

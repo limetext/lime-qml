@@ -18,4 +18,4 @@ import:
 - package: github.com/limetext/util
   version: master
 - package: gopkg.in/fsnotify.v1
-- package: gopkg.in/qml.v1
+- package: github.com/limetext/qml-go

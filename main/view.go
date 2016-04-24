@@ -10,11 +10,10 @@ import (
 	"io"
 	"strings"
 
-	"gopkg.in/qml.v1"
-
 	"github.com/limetext/backend"
 	"github.com/limetext/backend/log"
 	"github.com/limetext/backend/render"
+	"github.com/limetext/qml-go"
 	. "github.com/limetext/text"
 	"github.com/limetext/util"
 )

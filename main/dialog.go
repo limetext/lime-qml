@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/limetext/backend/log"
-	"gopkg.in/qml.v1"
+	"github.com/limetext/qml-go"
 )
 
 type (
