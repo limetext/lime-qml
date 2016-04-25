@@ -55,22 +55,18 @@ ApplicationWindow {
             title: qsTr("File")
             MenuItem {
                 text: qsTr("New File")
-                shortcut: "Ctrl+N"
                 onTriggered: frontend.runCommand("new_file");
             }
             MenuItem {
                 text: qsTr("Open File...")
-                shortcut: "Ctrl+O"
                 onTriggered: openDialog.open();
             }
             MenuItem {
                 text: qsTr("Save")
-                shortcut: "Ctrl+S"
                 onTriggered: frontend.runCommand("save");
             }
             MenuItem {
                 text: qsTr("Save As...")
-                shortcut: "Shift+Ctrl+S"
                 // TODO(.) : qml doesn't have a ready dialog like FileDialog
                 // onTriggered: saveAsDialog.open()
             }
@@ -81,18 +77,15 @@ ApplicationWindow {
             MenuSeparator{}
             MenuItem {
                 text: qsTr("New Window")
-                shortcut: "Shift+Ctrl+N"
                 onTriggered: frontend.runCommand("new_window");
             }
             MenuItem {
                 text: qsTr("Close Window")
-                shortcut: "Shift+Ctrl+W"
                 onTriggered: frontend.runCommand("close_window");
             }
             MenuSeparator{}
             MenuItem {
                 text: qsTr("Close File")
-                shortcut: "Ctrl+W"
                 onTriggered: frontend.runCommand("close_view");
             }
             MenuItem {
@@ -102,7 +95,6 @@ ApplicationWindow {
             MenuSeparator{}
             MenuItem {
                 text: qsTr("Quit")
-                shortcut: "Ctrl+Q"
                 onTriggered: Qt.quit(); // frontend.runCommand("quit");
             }
         }
@@ -117,41 +109,34 @@ ApplicationWindow {
             title: qsTr("Edit")
             MenuItem {
                 text: qsTr("Undo")
-                shortcut: "Ctrl+Z"
                 onTriggered: frontend.runCommand("undo");
             }
             MenuItem {
                 text: qsTr("Redo")
-                shortcut: "Ctrl+Y"
                 onTriggered: frontend.runCommand("redo");
             }
             Menu {
                 title: qsTr("Undo Selection")
                 MenuItem {
                     text: qsTr("Soft Undo")
-                    shortcut: "Ctrl+U"
                     onTriggered: frontend.runCommand("soft_undo");
                 }
                 MenuItem {
                     text: qsTr("Soft Redo")
-                    shortcut: "Shift+Ctrl+U"
                     onTriggered: frontend.runCommand("soft_redo");
                 }
             }
             MenuSeparator{}
             MenuItem {
                 text: qsTr("Copy")
-                shortcut: "Ctrl+C"
                 onTriggered: frontend.runCommand("copy");
             }
             MenuItem {
                 text: qsTr("Cut")
-                shortcut: "Ctrl+X"
                 onTriggered: frontend.runCommand("cut");
             }
             MenuItem {
                 text: qsTr("Paste")
-                shortcut: "Ctrl+V"
                 onTriggered: frontend.runCommand("paste");
             }
         }
@@ -159,7 +144,6 @@ ApplicationWindow {
             title: qsTr("View")
             MenuItem {
                 text: qsTr("Show/Hide Console")
-                shortcut: "Ctrl+`"
                 onTriggered: { consoleView.visible = !consoleView.visible }
             }
             MenuItem {
@@ -328,6 +312,7 @@ ApplicationWindow {
               View {
                 id: consoleView
                 myView: frontend.console
+                visible: false
                 minimapVisible: false
                 height: 100
               }
