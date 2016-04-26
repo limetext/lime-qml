@@ -12,13 +12,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/limetext/qml-go"
 	"gopkg.in/fsnotify.v1"
 
 	"github.com/limetext/backend"
 	"github.com/limetext/backend/keys"
 	"github.com/limetext/backend/log"
 	"github.com/limetext/backend/render"
+	"github.com/limetext/qml-go"
 	. "github.com/limetext/text"
 	"github.com/limetext/util"
 )
@@ -143,7 +143,7 @@ func (t *qmlfrontend) DefaultFg() color.RGBA {
 func (t *qmlfrontend) onNew(v *backend.View) {
 	fv := &frontendView{bv: v}
 	v.AddObserver(fv)
-	v.Settings().AddOnChange("blah", fv.onChange)
+	v.Settings().AddOnChange("qml.view.syntax", fv.onChange)
 
 	fv.Title.Text = v.FileName()
 	if len(fv.Title.Text) == 0 {
@@ -158,6 +158,7 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 	}
 
 	w2.window.Call("addTab", "", fv)
+	w2.window.Call("activateTab", w2.ActiveViewIndex())
 }
 
 // called when a view is closed
@@ -185,10 +186,7 @@ func (t *qmlfrontend) onLoad(v *backend.View) {
 	}
 	v2 := w2.views[i]
 	v2.Title.Text = v.FileName()
-	if w2.window != nil {
-		w2.window.Call("activateTab", w2.ActiveViewIndex())
-		w2.window.Call("setTabTitle", i, v2.Title.Text)
-	}
+	w2.window.Call("setTabTitle", i, v2.Title.Text)
 }
 
 func (t *qmlfrontend) onSelectionModified(v *backend.View) {
@@ -297,12 +295,10 @@ func (t *qmlfrontend) loop() (err error) {
 	ed.SetUserPath("../packages/User")
 
 	// Some packages(e.g Vintageos) need available window and view at start
-	// so we need at least one window and view(event empty) before loading
-	// packages. Sublime text also has available window view on startup
+	// so we need at least one window and view before loading packages.
+	// Sublime text also has available window view on startup
 	w := ed.NewWindow()
-	// TODO: we should open empty file but due qml package error we can't
-	// open any file from the qml frontend for now
-	v := w.OpenFile("main.go", 0)
+	w.NewFile()
 	ed.AddPackagesPath("../packages")
 
 	ed.SetFrontend(t)
@@ -374,10 +370,6 @@ func (t *qmlfrontend) loop() (err error) {
 			t.onLoad(v)
 		}
 	}
-
-	// also because we are openning a file now we need to set the syntax
-	// manually here
-	v.Settings().Set("syntax", "../packages/go-tmbundle/Syntaxes/Go.tmLanguage")
 
 	defer func() {
 		fmt.Println(util.Prof)
