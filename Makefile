@@ -1,3 +1,7 @@
+all: submodule
+
+precommit: fmt license test
+
 test:
 	@go test -race ./main/...
 build:
@@ -17,6 +21,10 @@ check_license:
 
 tasks:
 	go get -d -u github.com/limetext/tasks
+
+submodule:
+	git submodule update --init --recursive
+
 glide:
 	go get -v -u github.com/Masterminds/glide
 	glide install
