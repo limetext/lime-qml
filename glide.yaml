@@ -9,8 +9,11 @@ import:
 - package: github.com/limetext/commands
   version: master
 - package: github.com/limetext/gopy
+  version: master
   subpackages:
   - lib
+- package: github.com/limetext/qml-go
+  version: master
 - package: github.com/limetext/sublime
   version: master
 - package: github.com/limetext/text
@@ -18,4 +21,4 @@ import:
 - package: github.com/limetext/util
   version: master
 - package: gopkg.in/fsnotify.v1
-- package: github.com/limetext/qml-go
+  version: 836bfd95fecc0f1511dd66bdbf2b5b61ab8b00b6
