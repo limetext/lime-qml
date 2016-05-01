@@ -4,10 +4,16 @@ precommit: fmt license test
 
 test:
 	@go test -race ./main/...
+
 build:
 	cd main; go build
+
+run: build
+	cd main; ./main
+
 fmt:
 	@go fmt ./main/...
+
 license:
 	@go run $(GOPATH)/src/github.com/limetext/tasks/gen_license.go -scan=main
 
