@@ -2,14 +2,17 @@ all: submodule
 
 precommit: fmt license test
 
+build:
+	cd main && go build
+
 test:
 	@go test -race ./main/...
 
-build:
-	cd main; go build
-
 run: build
-	cd main; ./main
+	cd main && ./main
+
+test_run: build
+	cd main && ./main & export TASK_PID=$$! && sleep 10 && kill $$TASK_PID
 
 fmt:
 	@go fmt ./main/...
@@ -35,12 +38,13 @@ glide:
 	go get -v -u github.com/Masterminds/glide
 	glide install
 
-travis: tasks
+travis:
 ifeq ($(TRAVIS_OS_NAME),osx)
 	brew update
 	brew install oniguruma python3 qt5
 	brew link --force qt5
 endif
+travis: glide tasks
 
 travis_test: export PKG_CONFIG_PATH += $(PWD)/vendor/github.com/limetext/rubex:$(GOPATH)/src/github.com/limetext/rubex
-travis_test: test build
+travis_test: test test_run check_fmt check_license
