@@ -47,4 +47,4 @@ endif
 travis: glide tasks
 
 travis_test: export PKG_CONFIG_PATH += $(PWD)/vendor/github.com/limetext/rubex:$(GOPATH)/src/github.com/limetext/rubex
-travis_test: test test_run check_fmt check_license
+travis_test: test check_fmt check_license
