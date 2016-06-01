@@ -280,7 +280,7 @@ ApplicationWindow {
                             backgroundColor: "#BECCCC66"
                             textColor: "black"
                             font.pointSize: 8
-                            text: styleData.title
+                            text: (styleData.title != "") ? styleData.title : "untitled"
                             Component.onCompleted: {
                                 this.parent = tabs;
                             }
@@ -293,7 +293,7 @@ ApplicationWindow {
                             Text {
                                 id: tab_title
                                 anchors.centerIn: parent
-                                text: styleData.title.replace(/^.*[\\\/]/, '')
+                                text: (styleData.title != "") ? styleData.title.replace(/^.*[\\\/]/, '') : "untitled"
                                 color: frontend.defaultFg()
                                 anchors.verticalCenterOffset: 1
                             }

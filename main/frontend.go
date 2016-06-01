@@ -343,15 +343,14 @@ func (t *qmlfrontend) loop() (err error) {
 		return
 	}
 	if err := newEngine(); err != nil {
-		log.Error(err)
+		log.Error("Error on creating new engine: %s", err)
+		panic(err)
 	}
 
 	addWindow := func(w *backend.Window) {
 		fw := &frontendWindow{bw: w}
 		t.windows[w] = fw
-		if component != nil {
-			fw.launch(&wg, component)
-		}
+		fw.launch(&wg, component)
 	}
 
 	backend.OnNew.Add(t.onNew)
@@ -362,7 +361,7 @@ func (t *qmlfrontend) loop() (err error) {
 	backend.OnStatusChanged.Add(t.onStatusChanged)
 
 	// we need to add windows and views that are added before we registered
-	// actions for OnNewWindow, OnNew, ... events
+	// actions for OnNewWindow and OnNew events
 	for _, w := range ed.Windows() {
 		addWindow(w)
 		for _, v := range w.Views() {
