@@ -39,7 +39,7 @@ func main() {
 		py.Finalize()
 	}()
 
-	f = &frontend{windows: make(map[*backend.Window]*frontendWindow)}
+	f = &frontend{windows: make(map[*backend.Window]*window)}
 	go f.qmlBatchLoop()
 	qml.Run(f.loop)
 }

@@ -12,40 +12,40 @@ import (
 )
 
 // A helper glue structure connecting the backend Window with the qml.Window
-type frontendWindow struct {
+type window struct {
 	bw     *backend.Window
-	views  []*frontendView
+	views  []*view
 	window *qml.Window
 }
 
 // Instantiates a new window, and launches a new goroutine waiting for it
 // to be closed. The WaitGroup is increased at function entry and decreased
 // once the window closes.
-func (fw *frontendWindow) launch(wg *sync.WaitGroup, component qml.Object) {
+func (w *window) launch(wg *sync.WaitGroup, component qml.Object) {
 	wg.Add(1)
-	fw.window = component.CreateWindow(nil)
-	fw.window.Show()
-	fw.window.Set("myWindow", fw)
+	w.window = component.CreateWindow(nil)
+	w.window.Show()
+	w.window.Set("myWindow", w)
 
 	go func() {
-		fw.window.Wait()
+		w.window.Wait()
 		wg.Done()
 	}()
 }
 
-func (fw *frontendWindow) View(idx int) *frontendView {
-	return fw.views[idx]
+func (w *window) View(idx int) *view {
+	return w.views[idx]
 }
 
-func (fw *frontendWindow) ActiveViewIndex() int {
-	for i, v := range fw.views {
-		if v.bv == fw.bw.ActiveView() {
+func (w *window) ActiveViewIndex() int {
+	for i, v := range w.views {
+		if v.bv == w.bw.ActiveView() {
 			return i
 		}
 	}
 	return 0
 }
 
-func (fw *frontendWindow) Back() *backend.Window {
-	return fw.bw
+func (w *window) Back() *backend.Window {
+	return w.bw
 }

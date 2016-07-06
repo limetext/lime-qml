@@ -40,25 +40,25 @@ const (
 type frontend struct {
 	status_message string
 	lock           sync.Mutex
-	windows        map[*backend.Window]*frontendWindow
-	Console        *frontendView
+	windows        map[*backend.Window]*window
+	Console        *view
 	qmlDispatch    chan qmlDispatch
 }
 
 // Used for batching qml.Changed calls
 type qmlDispatch struct{ value, field interface{} }
 
-func (f *frontend) Window(w *backend.Window) *frontendWindow {
+func (f *frontend) Window(w *backend.Window) *window {
 	return f.windows[w]
 }
 
-func (f *frontend) Show(v *backend.View, r Region) {
+func (f *frontend) Show(bv *backend.View, r Region) {
 	// TODO
 }
 
-func (f *frontend) VisibleRegion(v *backend.View) Region {
+func (f *frontend) VisibleRegion(bv *backend.View) Region {
 	// TODO
-	return Region{0, v.Size()}
+	return Region{0, bv.Size()}
 }
 
 func (f *frontend) StatusMessage(msg string) {
@@ -188,35 +188,35 @@ func (f *frontend) DefaultFg() color.RGBA {
 }
 
 // Called when a new view is opened
-func (f *frontend) onNew(v *backend.View) {
-	fv := &frontendView{bv: v}
-	v.AddObserver(fv)
-	v.Settings().AddOnChange("qml.view.syntax", fv.onChange)
+func (f *frontend) onNew(bv *backend.View) {
+	v := &view{bv: bv}
+	bv.AddObserver(v)
+	bv.Settings().AddOnChange("qml.view.syntax", v.onChange)
 
-	fv.Title.Text = v.FileName()
-	if len(fv.Title.Text) == 0 {
-		fv.Title.Text = "untitled"
+	v.Title.Text = bv.FileName()
+	if len(v.Title.Text) == 0 {
+		v.Title.Text = "untitled"
 	}
 
-	w2 := f.windows[v.Window()]
-	w2.views = append(w2.views, fv)
+	w := f.windows[bv.Window()]
+	w.views = append(w.views, v)
 
-	if w2.window == nil {
+	if w.window == nil {
 		return
 	}
 
-	w2.window.Call("addTab", "", fv)
-	w2.window.Call("activateTab", w2.ActiveViewIndex())
+	w.window.Call("addTab", "", v)
+	w.window.Call("activateTab", w.ActiveViewIndex())
 }
 
 // called when a view is closed
-func (f *frontend) onClose(v *backend.View) {
-	w2 := f.windows[v.Window()]
-	for i := range w2.views {
-		if w2.views[i].bv == v {
-			w2.window.Call("removeTab", i)
-			copy(w2.views[i:], w2.views[i+1:])
-			w2.views = w2.views[:len(w2.views)-1]
+func (f *frontend) onClose(bv *backend.View) {
+	w := f.windows[bv.Window()]
+	for i := range w.views {
+		if w.views[i].bv == bv {
+			w.window.Call("removeTab", i)
+			copy(w.views[i:], w.views[i+1:])
+			w.views = w.views[:len(w.views)-1]
 			return
 		}
 	}
@@ -224,47 +224,47 @@ func (f *frontend) onClose(v *backend.View) {
 }
 
 // called when a view has loaded
-func (f *frontend) onLoad(v *backend.View) {
-	w2 := f.windows[v.Window()]
+func (f *frontend) onLoad(bv *backend.View) {
+	w := f.windows[bv.Window()]
 	i := 0
-	for i = range w2.views {
-		if w2.views[i].bv == v {
+	for i = range w.views {
+		if w.views[i].bv == bv {
 			break
 		}
 	}
-	v2 := w2.views[i]
-	v2.Title.Text = v.FileName()
-	w2.window.Call("setTabTitle", i, v2.Title.Text)
+	v := w.views[i]
+	v.Title.Text = bv.FileName()
+	w.window.Call("setTabTitle", i, v.Title.Text)
 }
 
-func (f *frontend) onSelectionModified(v *backend.View) {
-	w2 := f.windows[v.Window()]
+func (f *frontend) onSelectionModified(bv *backend.View) {
+	w := f.windows[bv.Window()]
 	i := 0
-	for i = range w2.views {
-		if w2.views[i].bv == v {
+	for i = range w.views {
+		if w.views[i].bv == bv {
 			break
 		}
 	}
-	v2 := w2.views[i]
-	if v2.qv == nil {
+	v := w.views[i]
+	if v.qv == nil {
 		return
 	}
-	v2.qv.Call("onSelectionModified")
+	v.qv.Call("onSelectionModified")
 }
 
-func (f *frontend) onStatusChanged(v *backend.View) {
-	w2 := f.windows[v.Window()]
+func (f *frontend) onStatusChanged(bv *backend.View) {
+	w := f.windows[bv.Window()]
 	i := 0
-	for i = range w2.views {
-		if w2.views[i].bv == v {
+	for i = range w.views {
+		if w.views[i].bv == bv {
 			break
 		}
 	}
-	v2 := w2.views[i]
-	if v2.qv == nil {
+	v := w.views[i]
+	if v.qv == nil {
 		return
 	}
-	v2.qv.Call("onStatusChanged")
+	v.qv.Call("onStatusChanged")
 }
 
 // Launches the provided command in a new goroutine
@@ -323,11 +323,11 @@ func (f *frontend) ColorScheme() backend.ColorScheme {
 // Quit closes all open windows to de-reference all qml objects
 func (f *frontend) Quit() (err error) {
 	// todo: handle changed files that aren't saved.
-	for _, v := range f.windows {
-		if v.window != nil {
-			v.window.Hide()
-			v.window.Destroy()
-			v.window = nil
+	for _, w := range f.windows {
+		if w.window != nil {
+			w.window.Hide()
+			w.window.Destroy()
+			w.window = nil
 		}
 	}
 	return
@@ -354,7 +354,7 @@ func (f *frontend) loop() (err error) {
 	ed.LogCommands(false)
 
 	c := ed.Console()
-	f.Console = &frontendView{bv: c}
+	f.Console = &view{bv: c}
 	c.AddObserver(f.Console)
 	c.AddObserver(f)
 
@@ -395,10 +395,10 @@ func (f *frontend) loop() (err error) {
 		panic(err)
 	}
 
-	addWindow := func(w *backend.Window) {
-		fw := &frontendWindow{bw: w}
-		f.windows[w] = fw
-		fw.launch(&wg, component)
+	addWindow := func(bw *backend.Window) {
+		w := &window{bw: bw}
+		f.windows[bw] = w
+		w.launch(&wg, component)
 	}
 
 	backend.OnNew.Add(f.onNew)
@@ -499,14 +499,14 @@ func (f *frontend) loop() (err error) {
 		}
 		log.Debug("re-launching all windows")
 		// Succeeded loading the file, re-launch all windows
-		for _, v := range f.windows {
-			v.launch(&wg, component)
+		for _, w := range f.windows {
+			w.launch(&wg, component)
 
-			for i, bv := range v.Back().Views() {
+			for i, bv := range w.Back().Views() {
 				f.onNew(bv)
 				f.onLoad(bv)
 
-				v.View(i)
+				w.View(i)
 			}
 		}
 	}

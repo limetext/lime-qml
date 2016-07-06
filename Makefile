@@ -11,6 +11,9 @@ test:
 run: build
 	cd main && ./main
 
+clean:
+	rm main/main main/debug.log
+
 test_run: build
 	cd main && ./main & export TASK_PID=$$! && sleep 10 && kill $$TASK_PID
 
