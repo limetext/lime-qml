@@ -95,7 +95,8 @@ ApplicationWindow {
             MenuSeparator{}
             MenuItem {
                 text: qsTr("Quit")
-                onTriggered: Qt.quit(); // frontend.runCommand("quit");
+		// TODO: frontend.runCommand("quit");
+		onTriggered: Qt.quit();
             }
         }
         Menu {

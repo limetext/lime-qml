@@ -67,20 +67,68 @@ func (t *qmlfrontend) StatusMessage(msg string) {
 	t.status_message = msg
 }
 
+const (
+	okButton = 1 << iota
+	cancelButton
+	yesButton
+	noButton
+)
+
+func (t *qmlfrontend) dialog(msg, icon string, btns int) (ret int) {
+	cbs := make(map[string]int)
+	btn := ""
+	if btns&okButton != 0 {
+		btn += " | StandardButton.Ok"
+		cbs["accepted"] = 1
+	}
+	if btns&cancelButton != 0 {
+		btn += " | StandardButton.Cancel"
+		cbs["rejected"] = 0
+	}
+
+	src := `import QtQuick 2.2
+import QtQuick.Dialogs 1.1
+
+Item {MessageDialog {
+	objectName: "realDialog"
+	text: "` + msg + `"
+	icon: ` + icon + `
+	standardButtons: ` + btn[3:] + `
+	Component.onCompleted: visible = true
+}}`
+	engine := qml.NewEngine()
+	component, err := engine.LoadString("dialog.qml", src)
+	if err != nil {
+		log.Error("Unable to instanciate dialog: %s", err)
+		return
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	obj := component.Create(nil).ObjectByName("realDialog")
+	for key, r := range cbs {
+		obj.On(key, func() {
+			ret = r
+			wg.Done()
+		})
+	}
+
+	wg.Wait()
+	engine.Destroy()
+	log.Fine("returning %d from dialog", ret)
+	return
+}
+
 func (t *qmlfrontend) ErrorMessage(msg string) {
 	log.Error(msg)
-	var q qmlDialog
-	q.Show(msg, "StandardIcon.Critical")
+	t.dialog(msg, "StandardIcon.Critical", okButton)
 }
 
 func (t *qmlfrontend) MessageDialog(msg string) {
-	var q qmlDialog
-	q.Show(msg, "StandardIcon.Information")
+	t.dialog(msg, "StandardIcon.Information", okButton)
 }
 
 func (t *qmlfrontend) OkCancelDialog(msg, ok string) bool {
-	var q qmlDialog
-	return q.Show(msg, "StandardIcon.Question") == 1
+	return t.dialog(msg, "StandardIcon.Question", okButton|cancelButton) == 1
 }
 
 func (t *qmlfrontend) scroll(b Buffer) {

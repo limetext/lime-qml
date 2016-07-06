@@ -19,7 +19,7 @@ imports:
   subpackages:
   - lib
 - name: github.com/limetext/loaders
-  version: 476e7b192526e3b2cc4302f78ab167eca21279c9
+  version: 06edf5a137bbe153db6c5e1438bc896e1c4df307
   subpackages:
   - json
   - plist
