@@ -212,40 +212,35 @@ func (f *frontend) onNew(bv *backend.View) {
 // called when a view is closed
 func (f *frontend) onClose(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	for i := range w.views {
-		if w.views[i].bv == bv {
-			w.window.Call("removeTab", i)
-			copy(w.views[i:], w.views[i+1:])
-			w.views = w.views[:len(w.views)-1]
-			return
-		}
+	_, i := w.findView(bv)
+	if i == -1 {
+		log.Error("Couldn't find closed view...")
+		return
 	}
-	log.Error("Couldn't find closed view...")
+	w.window.Call("removeTab", i)
+	copy(w.views[i:], w.views[i+1:])
+	w.views = w.views[:len(w.views)-1]
 }
 
 // called when a view has loaded
 func (f *frontend) onLoad(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	i := 0
-	for i = range w.views {
-		if w.views[i].bv == bv {
-			break
-		}
+	v, i := w.findView(bv)
+	if v == nil {
+		log.Error("Couldn't find loaded view")
+		return
 	}
-	v := w.views[i]
 	v.Title.Text = bv.FileName()
 	w.window.Call("setTabTitle", i, v.Title.Text)
 }
 
 func (f *frontend) onSelectionModified(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	i := 0
-	for i = range w.views {
-		if w.views[i].bv == bv {
-			break
-		}
+	v, _ := w.findView(bv)
+	if v == nil {
+		log.Error("Couldn't find modified view")
+		return
 	}
-	v := w.views[i]
 	if v.qv == nil {
 		return
 	}
@@ -254,13 +249,11 @@ func (f *frontend) onSelectionModified(bv *backend.View) {
 
 func (f *frontend) onStatusChanged(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	i := 0
-	for i = range w.views {
-		if w.views[i].bv == bv {
-			break
-		}
+	v, _ := w.findView(bv)
+	if v == nil {
+		log.Error("Couldn't find status changed view")
+		return
 	}
-	v := w.views[i]
 	if v.qv == nil {
 		return
 	}
@@ -288,20 +281,20 @@ func (f *frontend) HandleInput(text string, keycode int, modifiers int) bool {
 	if key, ok := lut[keycode]; ok {
 		ed := backend.GetEditor()
 
-		if (modifiers & shift_mod) != 0 {
+		if modifiers&shift_mod != 0 {
 			shift = true
 		}
-		if (modifiers & alt_mod) != 0 {
+		if modifiers&alt_mod != 0 {
 			alt = true
 		}
-		if (modifiers & ctrl_mod) != 0 {
+		if modifiers&ctrl_mod != 0 {
 			if runtime.GOOS == "darwin" {
 				super = true
 			} else {
 				ctrl = true
 			}
 		}
-		if (modifiers & meta_mod) != 0 {
+		if modifiers&meta_mod != 0 {
 			if runtime.GOOS == "darwin" {
 				ctrl = true
 			} else {

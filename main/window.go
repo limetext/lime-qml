@@ -49,3 +49,12 @@ func (w *window) ActiveViewIndex() int {
 func (w *window) Back() *backend.Window {
 	return w.bw
 }
+
+func (w *window) findView(bv *backend.View) (*view, int) {
+	for i, v := range w.views {
+		if v.bv == bv {
+			return v, i
+		}
+	}
+	return nil, -1
+}
