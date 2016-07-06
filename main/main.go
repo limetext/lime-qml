@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	t *qmlfrontend
+	f *frontend
 
 	rotateLog = flag.Bool("rotateLog", false, "Rotate debug log")
 )
@@ -39,7 +39,7 @@ func main() {
 		py.Finalize()
 	}()
 
-	t = &qmlfrontend{windows: make(map[*backend.Window]*frontendWindow)}
-	go t.qmlBatchLoop()
-	qml.Run(t.loop)
+	f = &frontend{windows: make(map[*backend.Window]*frontendWindow)}
+	go f.qmlBatchLoop()
+	qml.Run(f.loop)
 }

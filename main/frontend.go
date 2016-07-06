@@ -37,7 +37,7 @@ const (
 )
 
 // keeping track of frontend state
-type qmlfrontend struct {
+type frontend struct {
 	status_message string
 	lock           sync.Mutex
 	windows        map[*backend.Window]*frontendWindow
@@ -48,23 +48,23 @@ type qmlfrontend struct {
 // Used for batching qml.Changed calls
 type qmlDispatch struct{ value, field interface{} }
 
-func (t *qmlfrontend) Window(w *backend.Window) *frontendWindow {
-	return t.windows[w]
+func (f *frontend) Window(w *backend.Window) *frontendWindow {
+	return f.windows[w]
 }
 
-func (t *qmlfrontend) Show(v *backend.View, r Region) {
+func (f *frontend) Show(v *backend.View, r Region) {
 	// TODO
 }
 
-func (t *qmlfrontend) VisibleRegion(v *backend.View) Region {
+func (f *frontend) VisibleRegion(v *backend.View) Region {
 	// TODO
 	return Region{0, v.Size()}
 }
 
-func (t *qmlfrontend) StatusMessage(msg string) {
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	t.status_message = msg
+func (f *frontend) StatusMessage(msg string) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	f.status_message = msg
 }
 
 const (
@@ -74,7 +74,7 @@ const (
 	noButton
 )
 
-func (t *qmlfrontend) dialog(msg, icon string, btns int) (ret int) {
+func (f *frontend) dialog(msg, icon string, btns int) (ret int) {
 	cbs := make(map[string]int)
 	btn := ""
 	if btns&okButton != 0 {
@@ -118,37 +118,37 @@ Item {MessageDialog {
 	return
 }
 
-func (t *qmlfrontend) ErrorMessage(msg string) {
+func (f *frontend) ErrorMessage(msg string) {
 	log.Error(msg)
-	t.dialog(msg, "StandardIcon.Critical", okButton)
+	f.dialog(msg, "StandardIcon.Critical", okButton)
 }
 
-func (t *qmlfrontend) MessageDialog(msg string) {
-	t.dialog(msg, "StandardIcon.Information", okButton)
+func (f *frontend) MessageDialog(msg string) {
+	f.dialog(msg, "StandardIcon.Information", okButton)
 }
 
-func (t *qmlfrontend) OkCancelDialog(msg, ok string) bool {
-	return t.dialog(msg, "StandardIcon.Question", okButton|cancelButton) == 1
+func (f *frontend) OkCancelDialog(msg, ok string) bool {
+	return f.dialog(msg, "StandardIcon.Question", okButton|cancelButton) == 1
 }
 
-func (t *qmlfrontend) scroll(b Buffer) {
-	t.Show(backend.GetEditor().Console(), Region{b.Size(), b.Size()})
+func (f *frontend) scroll(b Buffer) {
+	f.Show(backend.GetEditor().Console(), Region{b.Size(), b.Size()})
 }
 
-func (t *qmlfrontend) Erased(changed_buffer Buffer, region_removed Region, data_removed []rune) {
-	t.scroll(changed_buffer)
+func (f *frontend) Erased(changed_buffer Buffer, region_removed Region, data_removed []rune) {
+	f.scroll(changed_buffer)
 }
 
-func (t *qmlfrontend) Inserted(changed_buffer Buffer, region_inserted Region, data_inserted []rune) {
-	t.scroll(changed_buffer)
+func (f *frontend) Inserted(changed_buffer Buffer, region_inserted Region, data_inserted []rune) {
+	f.scroll(changed_buffer)
 }
 
 // Apparently calling qml.Changed also triggers a re-draw, meaning that typed text is at the
 // mercy of how quick Qt happens to be rendering.
 // Try setting batching_enabled = false to see the effects of non-batching
-func (t *qmlfrontend) qmlBatchLoop() {
+func (f *frontend) qmlBatchLoop() {
 	queue := make(map[qmlDispatch]bool)
-	t.qmlDispatch = make(chan qmlDispatch, 1000)
+	f.qmlDispatch = make(chan qmlDispatch, 1000)
 	for {
 		if len(queue) > 0 {
 			select {
@@ -158,37 +158,37 @@ func (t *qmlfrontend) qmlBatchLoop() {
 					qml.Changed(k.value, k.field)
 				}
 				queue = make(map[qmlDispatch]bool)
-			case d := <-t.qmlDispatch:
+			case d := <-f.qmlDispatch:
 				queue[d] = true
 			}
 		} else {
-			queue[<-t.qmlDispatch] = true
+			queue[<-f.qmlDispatch] = true
 		}
 	}
 }
 
-func (t *qmlfrontend) qmlChanged(value, field interface{}) {
+func (f *frontend) qmlChanged(value, field interface{}) {
 	if !batching_enabled {
 		qml.Changed(value, field)
 	} else {
-		t.qmlDispatch <- qmlDispatch{value, field}
+		f.qmlDispatch <- qmlDispatch{value, field}
 	}
 }
 
-func (t *qmlfrontend) DefaultBg() color.RGBA {
-	c := t.ColorScheme().Spice(&render.ViewRegions{})
+func (f *frontend) DefaultBg() color.RGBA {
+	c := f.ColorScheme().Spice(&render.ViewRegions{})
 	c.Background.A = 0xff
 	return color.RGBA(c.Background)
 }
 
-func (t *qmlfrontend) DefaultFg() color.RGBA {
-	c := t.ColorScheme().Spice(&render.ViewRegions{})
+func (f *frontend) DefaultFg() color.RGBA {
+	c := f.ColorScheme().Spice(&render.ViewRegions{})
 	c.Foreground.A = 0xff
 	return color.RGBA(c.Foreground)
 }
 
 // Called when a new view is opened
-func (t *qmlfrontend) onNew(v *backend.View) {
+func (f *frontend) onNew(v *backend.View) {
 	fv := &frontendView{bv: v}
 	v.AddObserver(fv)
 	v.Settings().AddOnChange("qml.view.syntax", fv.onChange)
@@ -198,7 +198,7 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 		fv.Title.Text = "untitled"
 	}
 
-	w2 := t.windows[v.Window()]
+	w2 := f.windows[v.Window()]
 	w2.views = append(w2.views, fv)
 
 	if w2.window == nil {
@@ -210,8 +210,8 @@ func (t *qmlfrontend) onNew(v *backend.View) {
 }
 
 // called when a view is closed
-func (t *qmlfrontend) onClose(v *backend.View) {
-	w2 := t.windows[v.Window()]
+func (f *frontend) onClose(v *backend.View) {
+	w2 := f.windows[v.Window()]
 	for i := range w2.views {
 		if w2.views[i].bv == v {
 			w2.window.Call("removeTab", i)
@@ -224,8 +224,8 @@ func (t *qmlfrontend) onClose(v *backend.View) {
 }
 
 // called when a view has loaded
-func (t *qmlfrontend) onLoad(v *backend.View) {
-	w2 := t.windows[v.Window()]
+func (f *frontend) onLoad(v *backend.View) {
+	w2 := f.windows[v.Window()]
 	i := 0
 	for i = range w2.views {
 		if w2.views[i].bv == v {
@@ -237,8 +237,8 @@ func (t *qmlfrontend) onLoad(v *backend.View) {
 	w2.window.Call("setTabTitle", i, v2.Title.Text)
 }
 
-func (t *qmlfrontend) onSelectionModified(v *backend.View) {
-	w2 := t.windows[v.Window()]
+func (f *frontend) onSelectionModified(v *backend.View) {
+	w2 := f.windows[v.Window()]
 	i := 0
 	for i = range w2.views {
 		if w2.views[i].bv == v {
@@ -252,8 +252,8 @@ func (t *qmlfrontend) onSelectionModified(v *backend.View) {
 	v2.qv.Call("onSelectionModified")
 }
 
-func (t *qmlfrontend) onStatusChanged(v *backend.View) {
-	w2 := t.windows[v.Window()]
+func (f *frontend) onStatusChanged(v *backend.View) {
+	w2 := f.windows[v.Window()]
 	i := 0
 	for i = range w2.views {
 		if w2.views[i].bv == v {
@@ -269,17 +269,17 @@ func (t *qmlfrontend) onStatusChanged(v *backend.View) {
 
 // Launches the provided command in a new goroutine
 // (to avoid locking up the GUI)
-func (t *qmlfrontend) RunCommand(command string) {
-	t.RunCommandWithArgs(command, make(backend.Args))
+func (f *frontend) RunCommand(command string) {
+	f.RunCommandWithArgs(command, make(backend.Args))
 }
 
-func (t *qmlfrontend) RunCommandWithArgs(command string, args backend.Args) {
+func (f *frontend) RunCommandWithArgs(command string, args backend.Args) {
 	ed := backend.GetEditor()
 	go ed.RunCommand(command, args)
 }
 
-func (t *qmlfrontend) HandleInput(text string, keycode int, modifiers int) bool {
-	log.Debug("qmlfrontend.HandleInput: text=%v, key=%x, modifiers=%x", text, keycode, modifiers)
+func (f *frontend) HandleInput(text string, keycode int, modifiers int) bool {
+	log.Debug("frontend.HandleInput: text=%v, key=%x, modifiers=%x", text, keycode, modifiers)
 	shift := false
 	alt := false
 	ctrl := false
@@ -315,15 +315,15 @@ func (t *qmlfrontend) HandleInput(text string, keycode int, modifiers int) bool 
 	return false
 }
 
-func (t *qmlfrontend) ColorScheme() backend.ColorScheme {
+func (f *frontend) ColorScheme() backend.ColorScheme {
 	ed := backend.GetEditor()
 	return ed.GetColorScheme(ed.Settings().Get("color_scheme", "").(string))
 }
 
 // Quit closes all open windows to de-reference all qml objects
-func (t *qmlfrontend) Quit() (err error) {
+func (f *frontend) Quit() (err error) {
 	// todo: handle changed files that aren't saved.
-	for _, v := range t.windows {
+	for _, v := range f.windows {
 		if v.window != nil {
 			v.window.Hide()
 			v.window.Destroy()
@@ -333,7 +333,7 @@ func (t *qmlfrontend) Quit() (err error) {
 	return
 }
 
-func (t *qmlfrontend) loop() (err error) {
+func (f *frontend) loop() (err error) {
 	ed := backend.GetEditor()
 	// TODO: As InitCallback doc says initiation code to be deferred until
 	// after the UI is up and running. but because we dont have any
@@ -349,14 +349,14 @@ func (t *qmlfrontend) loop() (err error) {
 	w.NewFile()
 	ed.AddPackagesPath("../packages")
 
-	ed.SetFrontend(t)
+	ed.SetFrontend(f)
 	ed.LogInput(false)
 	ed.LogCommands(false)
 
 	c := ed.Console()
-	t.Console = &frontendView{bv: c}
-	c.AddObserver(t.Console)
-	c.AddObserver(t)
+	f.Console = &frontendView{bv: c}
+	c.AddObserver(f.Console)
+	c.AddObserver(f)
 
 	var (
 		engine    *qml.Engine
@@ -380,9 +380,9 @@ func (t *qmlfrontend) loop() (err error) {
 		}
 		log.Debug("calling newEngine")
 		engine = qml.NewEngine()
-		engine.On("quit", t.Quit)
+		engine.On("quit", f.Quit)
 		log.Debug("setvar frontend")
-		engine.Context().SetVar("frontend", t)
+		engine.Context().SetVar("frontend", f)
 		log.Debug("setvar editor")
 		engine.Context().SetVar("editor", backend.GetEditor())
 
@@ -397,24 +397,24 @@ func (t *qmlfrontend) loop() (err error) {
 
 	addWindow := func(w *backend.Window) {
 		fw := &frontendWindow{bw: w}
-		t.windows[w] = fw
+		f.windows[w] = fw
 		fw.launch(&wg, component)
 	}
 
-	backend.OnNew.Add(t.onNew)
-	backend.OnClose.Add(t.onClose)
-	backend.OnLoad.Add(t.onLoad)
-	backend.OnSelectionModified.Add(t.onSelectionModified)
+	backend.OnNew.Add(f.onNew)
+	backend.OnClose.Add(f.onClose)
+	backend.OnLoad.Add(f.onLoad)
+	backend.OnSelectionModified.Add(f.onSelectionModified)
 	backend.OnNewWindow.Add(addWindow)
-	backend.OnStatusChanged.Add(t.onStatusChanged)
+	backend.OnStatusChanged.Add(f.onStatusChanged)
 
 	// we need to add windows and views that are added before we registered
 	// actions for OnNewWindow and OnNew events
 	for _, w := range ed.Windows() {
 		addWindow(w)
 		for _, v := range w.Views() {
-			t.onNew(v)
-			t.onLoad(v)
+			f.onNew(v)
+			f.onLoad(v)
 		}
 	}
 
@@ -438,7 +438,7 @@ func (t *qmlfrontend) loop() (err error) {
 
 	go func() {
 		// reloadRequested = true
-		// t.Quit()
+		// f.Quit()
 
 		lastTime := time.Now()
 
@@ -453,7 +453,7 @@ func (t *qmlfrontend) loop() (err error) {
 				}
 				if strings.HasSuffix(ev.Name, ".qml") && ev.Op == fsnotify.Write && ev.Op != fsnotify.Chmod && !reloadRequested && waiting {
 					reloadRequested = true
-					t.Quit()
+					f.Quit()
 					lastTime = time.Now()
 				}
 			}
@@ -472,7 +472,7 @@ func (t *qmlfrontend) loop() (err error) {
 		waiting = false
 		log.Debug("All windows closed. reloadRequest: %v", reloadRequested)
 		// then we check if there's a reload request in the pipe
-		if !reloadRequested || len(t.windows) == 0 {
+		if !reloadRequested || len(f.windows) == 0 {
 			// This would be a genuine exit; all windows closed by the user
 			break
 		}
@@ -499,12 +499,12 @@ func (t *qmlfrontend) loop() (err error) {
 		}
 		log.Debug("re-launching all windows")
 		// Succeeded loading the file, re-launch all windows
-		for _, v := range t.windows {
+		for _, v := range f.windows {
 			v.launch(&wg, component)
 
 			for i, bv := range v.Back().Views() {
-				t.onNew(bv)
-				t.onLoad(bv)
+				f.onNew(bv)
+				f.onLoad(bv)
 
 				v.View(i)
 			}

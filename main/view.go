@@ -186,7 +186,7 @@ func (fv *frontendView) formatLine(line int) {
 		if fv.FormattedLine[line].Text != "" {
 			fv.FormattedLine[line].Text = ""
 			fv.FormattedLine[line].Chunks = fv.FormattedLine[line].Chunks[0:0]
-			t.qmlChanged(fv.FormattedLine[line], fv.FormattedLine[line])
+			f.qmlChanged(fv.FormattedLine[line], fv.FormattedLine[line])
 		}
 		return
 	}
@@ -219,6 +219,6 @@ func (fv *frontendView) formatLine(line int) {
 		fv.FormattedLine[line].RawText = fv.bv.Substr(vr)
 		fv.FormattedLine[line].Text = str
 		fv.FormattedLine[line].Chunks = chunks
-		t.qmlChanged(fv.FormattedLine[line], fv.FormattedLine[line])
+		f.qmlChanged(fv.FormattedLine[line], fv.FormattedLine[line])
 	}
 }
