@@ -8,7 +8,7 @@ build:
 test:
 	@go test -race ./main/...
 
-run: build
+run:
 	cd main && ./main
 
 clean:

@@ -5,7 +5,7 @@ import QtQuick.Dialogs 1.0
 import QtQuick.Layouts 1.0
 import QtGraphicalEffects 1.0
 
-import "dialogs"
+import "dialogs" as Dialogs
 
 ApplicationWindow {
     id: window
@@ -59,7 +59,7 @@ ApplicationWindow {
             }
             MenuItem {
                 text: qsTr("Open File...")
-                onTriggered: openDialog.open();
+                onTriggered: frontend.runCommand("prompt_open_file");
             }
             MenuItem {
                 text: qsTr("Save")
@@ -319,7 +319,10 @@ ApplicationWindow {
               }
         }
     }
-    OpenDialog {
-        id: openDialog
+    Dialogs.Message {
+        objectName: "messageDialog"
+    }
+    Dialogs.File {
+        objectName: "fileDialog"
     }
 }

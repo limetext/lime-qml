@@ -68,67 +68,77 @@ func (f *frontend) StatusMessage(msg string) {
 }
 
 const (
-	okButton = 1 << iota
-	cancelButton
-	yesButton
-	noButton
+	noIcon = iota
+	informationIcon
+	warningIcon
+	criticalIcon
+	questionIcon
+
+	okButton     = 1024
+	cancelButton = 4194304
 )
 
-func (f *frontend) dialog(msg, icon string, btns int) (ret int) {
+func (f *frontend) message(text string, icon, btns int) (ret int) {
 	cbs := make(map[string]int)
-	btn := ""
 	if btns&okButton != 0 {
-		btn += " | StandardButton.Ok"
 		cbs["accepted"] = 1
 	}
 	if btns&cancelButton != 0 {
-		btn += " | StandardButton.Cancel"
 		cbs["rejected"] = 0
 	}
 
-	src := `import QtQuick 2.2
-import QtQuick.Dialogs 1.1
+	w := f.windows[backend.GetEditor().ActiveWindow()]
+	obj := w.qw.ObjectByName("messageDialog")
+	obj.Set("text", text)
+	obj.Set("icon", icon)
+	obj.Set("standardButtons", btns)
 
-Item {MessageDialog {
-	objectName: "realDialog"
-	text: "` + msg + `"
-	icon: ` + icon + `
-	standardButtons: ` + btn[3:] + `
-	Component.onCompleted: visible = true
-}}`
-	engine := qml.NewEngine()
-	component, err := engine.LoadString("dialog.qml", src)
-	if err != nil {
-		log.Error("Unable to instanciate dialog: %s", err)
-		return
-	}
 	var wg sync.WaitGroup
 	wg.Add(1)
-	obj := component.Create(nil).ObjectByName("realDialog")
 	for key, r := range cbs {
 		obj.On(key, func() {
 			ret = r
 			wg.Done()
 		})
 	}
-
+	obj.Call("open")
 	wg.Wait()
-	engine.Destroy()
 	log.Fine("returning %d from dialog", ret)
 	return
 }
 
 func (f *frontend) ErrorMessage(msg string) {
 	log.Error(msg)
-	f.dialog(msg, "StandardIcon.Critical", okButton)
+	f.message(msg, criticalIcon, okButton)
 }
 
 func (f *frontend) MessageDialog(msg string) {
-	f.dialog(msg, "StandardIcon.Information", okButton)
+	f.message(msg, informationIcon, okButton)
 }
 
 func (f *frontend) OkCancelDialog(msg, ok string) bool {
-	return f.dialog(msg, "StandardIcon.Question", okButton|cancelButton) == 1
+	return f.message(msg, questionIcon, okButton|cancelButton) == 1
+}
+
+func (f *frontend) Prompt(title string) []string {
+	w := f.windows[backend.GetEditor().ActiveWindow()]
+	obj := w.qw.ObjectByName("fileDialog")
+	obj.Set("title", title)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	obj.On("accepted", wg.Done)
+	obj.On("rejected", wg.Done)
+	obj.Call("open")
+
+	wg.Wait()
+	res := obj.Property("fileUrls")
+	files, ok := res.([]string)
+	if !ok {
+		log.Error("Can't convert fileUrls property %v to []string", res)
+		return nil
+	}
+	return files
 }
 
 func (f *frontend) scroll(b Buffer) {
@@ -201,12 +211,12 @@ func (f *frontend) onNew(bv *backend.View) {
 	w := f.windows[bv.Window()]
 	w.views = append(w.views, v)
 
-	if w.window == nil {
+	if w.qw == nil {
 		return
 	}
 
-	w.window.Call("addTab", "", v)
-	w.window.Call("activateTab", w.ActiveViewIndex())
+	w.qw.Call("addTab", "", v)
+	w.qw.Call("activateTab", w.ActiveViewIndex())
 }
 
 // called when a view is closed
@@ -217,7 +227,7 @@ func (f *frontend) onClose(bv *backend.View) {
 		log.Error("Couldn't find closed view...")
 		return
 	}
-	w.window.Call("removeTab", i)
+	w.qw.Call("removeTab", i)
 	copy(w.views[i:], w.views[i+1:])
 	w.views = w.views[:len(w.views)-1]
 }
@@ -231,7 +241,7 @@ func (f *frontend) onLoad(bv *backend.View) {
 		return
 	}
 	v.Title.Text = bv.FileName()
-	w.window.Call("setTabTitle", i, v.Title.Text)
+	w.qw.Call("setTabTitle", i, v.Title.Text)
 }
 
 func (f *frontend) onSelectionModified(bv *backend.View) {
@@ -315,12 +325,12 @@ func (f *frontend) ColorScheme() backend.ColorScheme {
 
 // Quit closes all open windows to de-reference all qml objects
 func (f *frontend) Quit() (err error) {
-	// todo: handle changed files that aren't saved.
+	// TODO: handle changed files that aren't saved.
 	for _, w := range f.windows {
-		if w.window != nil {
-			w.window.Hide()
-			w.window.Destroy()
-			w.window = nil
+		if w.qw != nil {
+			w.qw.Hide()
+			w.qw.Destroy()
+			w.qw = nil
 		}
 	}
 	return
@@ -376,8 +386,6 @@ func (f *frontend) loop() (err error) {
 		engine.On("quit", f.Quit)
 		log.Debug("setvar frontend")
 		engine.Context().SetVar("frontend", f)
-		log.Debug("setvar editor")
-		engine.Context().SetVar("editor", backend.GetEditor())
 
 		log.Debug("loadfile")
 		component, err = engine.LoadFile(qmlWindowFile)

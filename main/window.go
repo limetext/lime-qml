@@ -13,9 +13,9 @@ import (
 
 // A helper glue structure connecting the backend Window with the qml.Window
 type window struct {
-	bw     *backend.Window
-	views  []*view
-	window *qml.Window
+	bw    *backend.Window
+	views []*view
+	qw    *qml.Window
 }
 
 // Instantiates a new window, and launches a new goroutine waiting for it
@@ -23,12 +23,12 @@ type window struct {
 // once the window closes.
 func (w *window) launch(wg *sync.WaitGroup, component qml.Object) {
 	wg.Add(1)
-	w.window = component.CreateWindow(nil)
-	w.window.Show()
-	w.window.Set("myWindow", w)
+	w.qw = component.CreateWindow(nil)
+	w.qw.Show()
+	w.qw.Set("myWindow", w)
 
 	go func() {
-		w.window.Wait()
+		w.qw.Wait()
 		wg.Done()
 	}()
 }
