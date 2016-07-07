@@ -132,12 +132,10 @@ func (f *frontend) Prompt(title string) []string {
 	obj.Call("open")
 
 	wg.Wait()
-	res := obj.Property("fileUrls")
-	files, ok := res.([]string)
-	if !ok {
-		log.Error("Can't convert fileUrls property %v to []string", res)
-		return nil
-	}
+	res := obj.List("fileUrls")
+	files := make([]string, res.Len())
+	res.Convert(&files)
+	log.Fine("Selected %s files", files)
 	return files
 }
 
