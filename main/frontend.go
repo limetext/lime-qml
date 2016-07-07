@@ -120,10 +120,11 @@ func (f *frontend) OkCancelDialog(msg, ok string) bool {
 	return f.message(msg, questionIcon, okButton|cancelButton) == 1
 }
 
-func (f *frontend) Prompt(title string) []string {
+func (f *frontend) Prompt(title, folder string) []string {
 	w := f.windows[backend.GetEditor().ActiveWindow()]
 	obj := w.qw.ObjectByName("fileDialog")
 	obj.Set("title", title)
+	obj.Set("folder", folder)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -135,6 +136,11 @@ func (f *frontend) Prompt(title string) []string {
 	res := obj.List("fileUrls")
 	files := make([]string, res.Len())
 	res.Convert(&files)
+	for i, file := range files {
+		if file[:7] == "file://" {
+			files[i] = file[7:]
+		}
+	}
 	log.Fine("Selected %s files", files)
 	return files
 }
