@@ -8,24 +8,13 @@ import (
 	"flag"
 	"runtime"
 
-	"github.com/limetext/backend"
 	"github.com/limetext/backend/log"
 	_ "github.com/limetext/commands"
 	"github.com/limetext/gopy/lib"
-	"github.com/limetext/qml-go"
 	_ "github.com/limetext/sublime"
 )
 
-const (
-	console_height  = 20
-	render_chan_len = 2
-)
-
-var (
-	f *frontend
-
-	rotateLog = flag.Bool("rotateLog", false, "Rotate debug log")
-)
+var rotateLog = flag.Bool("rotateLog", false, "Rotate debug log")
 
 func main() {
 	flag.Parse()
@@ -39,7 +28,5 @@ func main() {
 		py.Finalize()
 	}()
 
-	f = &frontend{windows: make(map[*backend.Window]*window)}
-	go f.qmlBatchLoop()
-	qml.Run(f.loop)
+	initFrontend()
 }

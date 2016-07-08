@@ -186,7 +186,7 @@ func (v *view) formatLine(line int) {
 		if v.FormattedLine[line].Text != "" {
 			v.FormattedLine[line].Text = ""
 			v.FormattedLine[line].Chunks = v.FormattedLine[line].Chunks[0:0]
-			f.qmlChanged(v.FormattedLine[line], v.FormattedLine[line])
+			fe.qmlChanged(v.FormattedLine[line], v.FormattedLine[line])
 		}
 		return
 	}
@@ -219,6 +219,6 @@ func (v *view) formatLine(line int) {
 		v.FormattedLine[line].RawText = v.bv.Substr(vr)
 		v.FormattedLine[line].Text = str
 		v.FormattedLine[line].Chunks = chunks
-		f.qmlChanged(v.FormattedLine[line], v.FormattedLine[line])
+		fe.qmlChanged(v.FormattedLine[line], v.FormattedLine[line])
 	}
 }

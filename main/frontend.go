@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/atotto/clipboard"
 	"gopkg.in/fsnotify.v1"
 
 	"github.com/limetext/backend"
@@ -47,6 +48,14 @@ type frontend struct {
 
 // Used for batching qml.Changed calls
 type qmlDispatch struct{ value, field interface{} }
+
+var fe *frontend
+
+func initFrontend() {
+	fe = &frontend{windows: make(map[*backend.Window]*window)}
+	go fe.qmlBatchLoop()
+	qml.Run(fe.loop)
+}
 
 func (f *frontend) Window(w *backend.Window) *window {
 	return f.windows[w]
@@ -348,6 +357,7 @@ func (f *frontend) loop() (err error) {
 	ed.Init()
 	ed.SetDefaultPath("../packages/Default")
 	ed.SetUserPath("../packages/User")
+	ed.SetClipboardFuncs(clipboard.WriteAll, clipboard.ReadAll)
 
 	// Some packages(e.g Vintageos) need available window and view at start
 	// so we need at least one window and view before loading packages.
