@@ -1,5 +1,5 @@
 hash: a2f2afeb7ed98fd72bd7f2ee8e9e7ee7c848adf4a12fbb81c71d0ee725b6b0af
-updated: 2016-07-12T10:24:36.795963221-06:00
+updated: 2016-07-12T11:18:30.173916044-06:00
 imports:
 - name: github.com/atotto/clipboard
   version: bb272b845f1112e10117e3e45ce39f690c0001ad
@@ -26,7 +26,7 @@ imports:
 - name: github.com/limetext/log4go
   version: 41f52bba2191d3bfa764c6867968eb06acbd8f3c
 - name: github.com/limetext/qml-go
-  version: bbb94ca556a5ce871b0a1aa9d21ef5cd7e0b2940
+  version: 45d4715a27ab22e7cc73ffd86bdaa67e50f37624
   subpackages:
   - cdata
   - internal/util
