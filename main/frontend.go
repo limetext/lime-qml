@@ -129,11 +129,20 @@ func (f *frontend) OkCancelDialog(msg, ok string) bool {
 	return f.message(msg, questionIcon, okButton|cancelButton) == 1
 }
 
-func (f *frontend) Prompt(title, folder string) []string {
+func (f *frontend) Prompt(title, folder string, flags int) []string {
 	w := f.windows[backend.GetEditor().ActiveWindow()]
 	obj := w.qw.ObjectByName("fileDialog")
 	obj.Set("title", title)
 	obj.Set("folder", folder)
+	if flags&backend.SaveAs != 0 {
+		obj.Set("selectExisting", false)
+	}
+	if flags&backend.OnlyFolder != 0 {
+		obj.Set("selectFolder", true)
+	}
+	if flags&backend.SelectMultiple != 0 {
+		obj.Set("selectMultiple", true)
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -396,10 +405,10 @@ func (f *frontend) loop() (err error) {
 		log.Debug("calling newEngine")
 		engine = qml.NewEngine()
 		engine.On("quit", f.Quit)
-		log.Debug("setvar frontend")
+		log.Fine("setvar frontend")
 		engine.Context().SetVar("frontend", f)
 
-		log.Debug("loadfile")
+		log.Fine("loading %s", qmlWindowFile)
 		component, err = engine.LoadFile(qmlWindowFile)
 		return
 	}

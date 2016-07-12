@@ -1,11 +1,9 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.0
 import QtQuick.Controls.Styles 1.0
-import QtQuick.Dialogs 1.0
+import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.0
 import QtGraphicalEffects 1.0
-
-import "dialogs" as Dialogs
 
 ApplicationWindow {
     id: window
@@ -319,10 +317,10 @@ ApplicationWindow {
               }
         }
     }
-    Dialogs.Message {
+    MessageDialog {
         objectName: "messageDialog"
     }
-    Dialogs.File {
+    FileDialog {
         objectName: "fileDialog"
     }
 }
