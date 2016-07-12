@@ -39,7 +39,7 @@ Item {
         delegate:
             Canvas {
               id: canvas
-              property var line: !myView ? null : myView.line(index)
+              property var line: !myView ? null : display
               property var lineText: !line ? null : line.text
               onLineTextChanged: {
                 requestPaint();

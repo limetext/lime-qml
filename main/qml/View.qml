@@ -19,15 +19,10 @@ Item {
   property var statusBar: {}
 
 
-  property var linesModel: ListModel {}
+  property var linesModel: myView.formattedLines
 
-
-  function addLine() {
-      linesModel.append({});
-  }
-
-  function insertLine(idx) {
-      linesModel.insert(idx, {});
+  function setTitle(title) {
+    parent.title = title;
   }
 
   Rectangle  {
@@ -48,9 +43,10 @@ Item {
 
   function updateMyView() {
       console.log("Buffer: updateMyView: ", myView);
-      linesModel.clear();
-      if (myView)
+      // linesModel.clear();
+      if (myView) {
         myView.fix(viewRoot);
+      }
   }
 
   function onSelectionModified() {

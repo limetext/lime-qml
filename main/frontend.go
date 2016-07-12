@@ -212,7 +212,7 @@ func (f *frontend) DefaultFg() color.RGBA {
 
 // Called when a new view is opened
 func (f *frontend) onNew(bv *backend.View) {
-	v := &view{bv: bv}
+	v := newView(bv)
 	bv.AddObserver(v)
 	bv.Settings().AddOnChange("qml.view.syntax", v.onChange)
 
@@ -224,12 +224,10 @@ func (f *frontend) onNew(bv *backend.View) {
 	w := f.windows[bv.Window()]
 	w.views = append(w.views, v)
 
-	if w.qw == nil {
-		return
+	if w.qw != nil {
+		w.qw.Call("addTab", "", v)
+		w.qw.Call("activateTab", w.ActiveViewIndex())
 	}
-
-	w.qw.Call("addTab", "", v)
-	w.qw.Call("activateTab", w.ActiveViewIndex())
 }
 
 // called when a view is closed
@@ -371,7 +369,7 @@ func (f *frontend) loop() (err error) {
 	ed.LogCommands(false)
 
 	c := ed.Console()
-	f.Console = &view{bv: c}
+	f.Console = newView(c)
 	c.AddObserver(f.Console)
 	c.AddObserver(f)
 

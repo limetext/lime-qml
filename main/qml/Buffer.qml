@@ -4,6 +4,8 @@ import QtQuick.Layouts 1.0
 Item {
     id: editorRoot
 
+    clip: true
+
     property var linesModel
     property var myView
     property var listView: listView
@@ -12,6 +14,12 @@ Item {
     property string fontFace: "Monospace"
     property var cursor: Qt.IBeamCursor
     property bool ctrl: false
+
+    onMyViewChanged: {
+      if (myView != null) {
+        onSelectionModified()
+      }
+    }
 
     function getCurrentSelection() {
         if (!myView || !myView.back()) {
@@ -32,7 +40,8 @@ Item {
     property var tabWidth: spaceWidth * 4
     property var lineHeight: fontMetrics.lineSpacing
 
-    property var lineNumbersWidth: fontMetrics.advanceWidth(''+(myView? myView.lines() : "0"))
+    property var numLines: listView.count
+    property var lineNumbersWidth: fontMetrics.advanceWidth(''+numLines)
     onEditorFontChanged: {
       editorRoot.spaceWidth = fontMetrics.advanceWidth(' ');
     }
@@ -128,6 +137,12 @@ Item {
             width: parent.width
             height: lineHeight
 
+            property var line: display
+            property var lineText: !line ? null : line.text
+            onLineTextChanged: {
+              canvas.requestPaint();
+            }
+
             Loader {
               id: gutter
               sourceComponent: gutterComponent
@@ -138,12 +153,7 @@ Item {
 
             Canvas {
               id: canvas
-              property var line: myView && index > -1 ? myView.line(index) : null
-              property var lineText: !line ? null : line.text
 
-              onLineTextChanged: {
-                requestPaint();
-              }
 
               // TODO: why doesn't this work?
               // property var spaceWidth: fontMetrics.advanceWidth(' ')
@@ -167,7 +177,7 @@ Item {
                 var tabWidth = editorRoot.tabWidth;
 
                 var ctx = canvas.getContext("2d");
-                ctx.reset();
+                // ctx.reset();
 
                 ctx.font = editorFont;
 
@@ -256,12 +266,12 @@ Item {
             width: parent.width-verticalScrollBar.width
 
 
-            function colFromMouseX(lineIndex, mouseX) {
+            function colFromMouseX(line, mouseX) {
 
                 const printDebug = false;
 
-                var line = myView.line(lineIndex);
-                var lineText = line.rawText;
+                if (line == null) return 0;
+                var lineText = line.text;
 
                 var fullWidth = line.width;
 
@@ -332,7 +342,7 @@ Item {
                     selection = getCurrentSelection();
 
                 if (item != null && selection != null) {
-                    var col = colFromMouseX(index, mouse.x);
+                    var col = colFromMouseX(item.line, mouse.x);
                     point.r = myView.back().textPoint(index, col);
                     if (point.p != null && point.p != point.r) {
                         // Remove the last region and replace it with new one
@@ -354,7 +364,7 @@ Item {
                     selection = getCurrentSelection();
 
                 if (item != null) {
-                    var col = colFromMouseX(index, mouse.x);
+                    var col = colFromMouseX(item.line, mouse.x);
                     point.p = myView.back().textPoint(index, col)
 
                     if (!ctrl) {
@@ -373,7 +383,7 @@ Item {
                     index = listView.indexAt(0, mouse.y+listView.contentY);
 
                 if (item != null) {
-                    var col = colFromMouseX(index, mouse.x);
+                    var col = colFromMouseX(item.line, mouse.x);
                     point.p = myView.back().textPoint(index, col)
 
                     if (!ctrl) {
@@ -587,8 +597,8 @@ Item {
                   var rowcolA = back.rowCol(a);
                   var rowcolB = back.rowCol(b);
 
-                  var xA = getCursorOffset(rowcolA, back);
-                  var xB = getCursorOffset(rowcolB, back);
+                  var xA = Math.round(getCursorOffset(rowcolA, back));
+                  var xB = Math.round(getCursorOffset(rowcolB, back));
 
                   ctx.fillStyle = fillColor;
                   ctx.fillRect(xA+1, y, xB-xA-1, lh+1);
@@ -633,10 +643,12 @@ Item {
 
     // getCursorOffset returns the x coordinate for the cursor.
     function getCursorOffset(rowcol, buf) {
-        var line = myView.line(rowcol[0]);
+        var partialWidth = gutterWidth;
+
+        var line = linesModel.data(linesModel.index(rowcol[0], 0));
+        if (line == null) return partialWidth;
 
         var len = line.chunksLen();
-        var partialWidth = gutterWidth;
         if (len == 0) return partialWidth;
         var partialCol = 0;
         var ci = 0;
