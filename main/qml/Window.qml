@@ -15,36 +15,23 @@ ApplicationWindow {
     property string themeFolder: "../../packages/Soda/Soda Dark"
 
     function view() {
-      var tab = tabs.getTab(tabs.currentIndex);
-       return tab === undefined ? undefined : tab.item;
+      return mainView.view();
     }
 
     function addTab(title, view) {
-      var tab = tabs.addTab(title, tabTemplate);
-      console.log("addTab", tab, tab.item);
-
-      var loadTab = function() {
-        tab.item.myView = view;
-      }
-
-      if (tab.item != null) {
-        loadTab();
-      } else {
-        tab.loaded.connect(loadTab);
-      }
-      tab.active = true;
+      return mainView.addTab(view);
     }
 
     function activateTab(tabIndex) {
-      tabs.currentIndex = tabIndex;
+      return mainView.activateTab(tabIndex);
     }
 
     function removeTab(tabIndex) {
-      tabs.removeTab(tabIndex);
+      return mainView.removeTab(tabIndex);
     }
 
     function setTabTitle(tabIndex, title) {
-      tabs.getTab(tabIndex).title = title;
+      return mainView.setTabTitle(tabIndex, title);
     }
 
     menuBar: MenuBar {
@@ -93,8 +80,8 @@ ApplicationWindow {
             MenuSeparator{}
             MenuItem {
                 text: qsTr("Quit")
-		// TODO: frontend.runCommand("quit");
-		onTriggered: Qt.quit();
+            		// TODO: frontend.runCommand("quit");
+            		onTriggered: Qt.quit();
             }
         }
         Menu {
@@ -161,8 +148,8 @@ ApplicationWindow {
         }
     }
 
-    property Tab currentTab: tabs.count == 0? null : tabs.getTab(tabs.currentIndex)
-    property var statusBarMap: currentTab == null || currentTab.item == null ? null : tabs.getTab(tabs.currentIndex).item.statusBar
+    property Tab currentTab: mainView.currentTab()
+    property var statusBarMap: (currentTab == null || currentTab.item == null) ? null : currentTab.item.statusBar
     property var statusBarSorted: []
     onStatusBarMapChanged: {
       if (statusBarMap == null) {
@@ -265,48 +252,8 @@ ApplicationWindow {
         SplitView {
             anchors.fill: parent
             orientation: Qt.Vertical
-              TabView {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                id: tabs
-                objectName: "tabs"
-                style: TabViewStyle {
-                    frameOverlap: 0
-                    tab: Item {
-                        implicitWidth: 180
-                        implicitHeight: 28
-                        ToolTip {
-                            backgroundColor: "#BECCCC66"
-                            textColor: "black"
-                            font.pointSize: 8
-                            text: (styleData.title != "") ? styleData.title : "untitled"
-                            Component.onCompleted: {
-                                this.parent = tabs;
-                            }
-                        }
-                        BorderImage {
-                            source: themeFolder + (styleData.selected ? "/tab-active.png" : "/tab-inactive.png")
-                            border { left: 5; top: 5; right: 5; bottom: 5 }
-                            width: 180
-                            height: 25
-                            Text {
-                                id: tab_title
-                                anchors.centerIn: parent
-                                text: (styleData.title != "") ? styleData.title.replace(/^.*[\\\/]/, '') : "untitled"
-                                color: frontend.defaultFg()
-                                anchors.verticalCenterOffset: 1
-                            }
-                        }
-                    }
-                    tabBar: Image {
-                        fillMode: Image.TileHorizontally
-                        source: themeFolder + "/tabset-background.png"
-                    }
-                    tabsMovable: true
-                    frame: Rectangle { color: frontend.defaultBg() }
-                    tabOverlap: 5
-                }
-
+              MainView {
+                id: mainView
               }
               View {
                 id: consoleView
