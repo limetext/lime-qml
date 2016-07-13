@@ -153,7 +153,7 @@ ApplicationWindow {
     property var statusBarSorted: []
     onStatusBarMapChanged: {
       if (statusBarMap == null) {
-        statusBarSorted = [];
+        statusBarSorted = [["a", "git branch: master"], ["b", "INSERT MODE"], ["c", "Line xx, Column yy"]];
         return;
       }
 
@@ -163,7 +163,7 @@ ApplicationWindow {
       console.log("status bar keys:", keys);
       var sorted = [];
       for (var i = 0; i < keys.length; i++)
-        sorted.push(statusBarMap[keys[i]]);
+        sorted.push([keys[i], statusBarMap[keys[i]]]);
 
       statusBarSorted = sorted;
     }
@@ -191,25 +191,9 @@ ApplicationWindow {
                   model: statusBarSorted
                   delegate:
                     Label {
-                        text: modelData
+                        text: modelData[1]
                         color: statusBar.textColor
                     }
-
-                }
-                Label {
-                    text: "git branch: master"
-                    color: statusBar.textColor
-                }
-
-                Label {
-                    text: "INSERT MODE"
-                    color: statusBar.textColor
-                }
-
-                Label {
-                    id: statusBarCaretPos
-                    text: "Line xx, Column yy"
-                    color: statusBar.textColor
                 }
             }
 
