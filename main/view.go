@@ -97,8 +97,6 @@ func (v *view) Erased(changed_buffer Buffer, region_removed Region, data_removed
 
 	delLines := newlines //row2 - row1
 
-	fmt.Printf("bufferDelete: %v:%v  %v\n", row1, col1, delLines)
-
 	// first line
 	if col1 > 0 { // line already exists, inserting in the middle of the line
 		v.formatLine(row1, v.FormattedLines.get(row1))
@@ -120,11 +118,9 @@ func (v *view) Inserted(changed_buffer Buffer, region_inserted Region, data_inse
 	defer prof.Exit()
 
 	row1, col1 := v.bv.RowCol(region_inserted.A)
-	row2, col2 := v.bv.RowCol(region_inserted.B)
-	fmt.Printf("bufferChanged: %v:%v  %v:%v\n", row1, col1, row2, col2)
+	row2, _ := v.bv.RowCol(region_inserted.B)
 
 	addLines := row2 - row1
-	fmt.Println("addLines: ", addLines)
 
 	// first line
 	if col1 > 0 { // line already exists, inserting in the middle of the line
