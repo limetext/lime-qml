@@ -142,7 +142,7 @@ func (v *view) Inserted(changed_buffer Buffer, region_inserted Region, data_inse
 }
 
 func (v *view) onChange(name string) {
-	if name != "syntax" {
+	if name != "lime.syntax.updated" {
 		return
 	}
 	// force redraw, as the syntax regions might have changed...
