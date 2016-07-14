@@ -506,6 +506,7 @@ func (f *frontend) loop() (err error) {
 			if err := newEngine(); err != nil {
 				// Reset reload status
 				reloadRequested = false
+				waiting = true
 				log.Error(err)
 				for !reloadRequested {
 					// This loop allows us to re-try reloading
@@ -514,6 +515,7 @@ func (f *frontend) loop() (err error) {
 					// reload request (ie on the next save of the file).
 					time.Sleep(time.Second)
 				}
+				waiting = false
 				continue
 			}
 			log.Debug("break")
