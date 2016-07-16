@@ -104,12 +104,15 @@ func (f *frontend) message(text string, icon, btns int) (ret int) {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	for key, r := range cbs {
+	for key, _ := range cbs {
+		val := cbs[key]
 		obj.On(key, func() {
-			ret = r
+			ret = val
 			wg.Done()
 		})
 	}
+	defer obj.Clear()
+
 	obj.Call("open")
 	wg.Wait()
 	log.Fine("returning %d from dialog", ret)
@@ -133,24 +136,32 @@ func (f *frontend) Prompt(title, folder string, flags int) []string {
 	w := f.windows[backend.GetEditor().ActiveWindow()]
 	obj := w.qw.ObjectByName("fileDialog")
 	obj.Set("title", title)
-	obj.Set("folder", folder)
-	if flags&backend.SaveAs != 0 {
+	obj.Set("folder", "file://"+folder)
+	if flags&backend.PROMPT_SAVE_AS != 0 {
 		obj.Set("selectExisting", false)
 	}
-	if flags&backend.OnlyFolder != 0 {
+	if flags&backend.PROMPT_ONLY_FOLDER != 0 {
 		obj.Set("selectFolder", true)
 	}
-	if flags&backend.SelectMultiple != 0 {
+	if flags&backend.PROMPT_SELECT_MULTIPLE != 0 {
 		obj.Set("selectMultiple", true)
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(1)
+	rejected := false
 	obj.On("accepted", wg.Done)
-	obj.On("rejected", wg.Done)
-	obj.Call("open")
+	obj.On("rejected", func() {
+		rejected = true
+		wg.Done()
+	})
+	defer obj.Clear()
 
+	obj.Call("open")
 	wg.Wait()
+	if rejected {
+		return nil
+	}
 	res := obj.List("fileUrls")
 	files := make([]string, res.Len())
 	res.Convert(&files)
@@ -159,7 +170,7 @@ func (f *frontend) Prompt(title, folder string, flags int) []string {
 			files[i] = file[7:]
 		}
 	}
-	log.Fine("Selected %s files", files)
+	log.Debug("Selected %s files", files)
 	return files
 }
 

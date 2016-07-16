@@ -52,8 +52,7 @@ ApplicationWindow {
             }
             MenuItem {
                 text: qsTr("Save As...")
-                // TODO(.) : qml doesn't have a ready dialog like FileDialog
-                // onTriggered: saveAsDialog.open()
+                onTriggered: frontend.runCommand("prompt_save_as");
             }
             MenuItem {
                 text: qsTr("Save All")
