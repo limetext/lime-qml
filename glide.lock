@@ -26,7 +26,7 @@ imports:
 - name: github.com/limetext/log4go
   version: 41f52bba2191d3bfa764c6867968eb06acbd8f3c
 - name: github.com/limetext/qml-go
-  version: 45d4715a27ab22e7cc73ffd86bdaa67e50f37624
+  version: 6dfef3c3fad9bbeca69b9336d5c7331288863af6
   subpackages:
   - cdata
   - internal/util
