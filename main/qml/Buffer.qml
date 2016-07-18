@@ -56,14 +56,6 @@ Item {
         clip: true
 
 
-        Text {
-          id: lineNumber
-          width: lineNumbersWidth
-          height: parent.height
-
-          text: lineNumberText
-          color: "white"
-        }
 
         Item {
           // spacing
@@ -71,16 +63,32 @@ Item {
           height: 10
         }
 
-        Rectangle {
-          width: 1
+        Text {
+          id: lineNumber
+          width: lineNumbersWidth
           height: parent.height
+          horizontalAlignment: Text.AlignRight
 
-          color: "white"
+          text: lineNumberText
+          color: "#888888"
         }
 
         Item {
           // spacing
-          width: 10
+          width: 4
+          height: 10
+        }
+
+        // Rectangle {
+        //   width: 1
+        //   height: parent.height
+        //
+        //   color: "#888888"
+        // }
+
+        Item {
+          // spacing
+          width: 4
           height: 10
         }
       }
