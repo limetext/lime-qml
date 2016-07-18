@@ -24,9 +24,7 @@ TabView {
               textColor: "black"
               font.pointSize: 8
               text: titleText
-              Component.onCompleted: {
-                  this.parent = tabs;
-              }
+              visibleParent: tabs
           }
           BorderImage {
               source: themeFolder + (styleData.selected ? "/tab-active.png" : "/tab-inactive.png")

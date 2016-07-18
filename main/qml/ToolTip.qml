@@ -17,19 +17,20 @@ Item {
     property alias backgroundColor: content.color
     property alias textColor: toolTip.color
     property alias font: toolTip.font
+    property Item visibleParent
 
 
     MouseArea {
         id: mouseItem
-        anchors.fill: parent;
-        hoverEnabled: true;
+        anchors.fill: parent
+        hoverEnabled: true
         acceptedButtons: Qt.NoButton
         onPositionChanged: {
             function getAbsolutePosition(node) {
                 var returnPos = {};
                 returnPos.x = 0;
                 returnPos.y = 0;
-                if(node !== undefined && node !== null) {
+                if(node !== undefined && node !== null && node != visibleParent) {
                     var parentValue = getAbsolutePosition(node.parent);
                     returnPos.x = parentValue.x + node.x;
                     returnPos.y = parentValue.y + node.y;
@@ -57,6 +58,7 @@ Item {
 
     Component.onCompleted: {
         mouseItem.parent = toolTipRoot.parent;
+        toolTipRoot.parent = visibleParent;
     }
 
     Item {
