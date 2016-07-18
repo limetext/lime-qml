@@ -106,8 +106,8 @@ Item {
       y: topT + (topPercent < 0.01 ? 0 : 2)
       height: bottomT - y - (bottomPercent > 0.99 ? 0 : 2)
 
-      Component.onCompleted: {
-
+      onCurrentIndexChanged: {
+        getTab(currentIndex).item.children[0].myView.setActive();
       }
 
     }

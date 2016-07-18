@@ -77,6 +77,11 @@ func (v *view) Fix(obj qml.Object) {
 	v.Inserted(nil, r, v.bv.SubstrR(r))
 }
 
+// SetActive is called from QML when the active tab is set to this view
+func (v *view) SetActive() {
+	v.bv.Window().SetActiveView(v.bv)
+}
+
 func (v *view) Erased(changed_buffer Buffer, region_removed Region, data_removed []rune) {
 	if v.qv == nil {
 		return
