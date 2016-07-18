@@ -18,20 +18,20 @@ ApplicationWindow {
       return mainView.view();
     }
 
-    function addTab(title, view) {
-      return mainView.addTab(view);
+    function addTab(tabId, view) {
+      return mainView.addTab(tabId, view);
     }
 
-    function activateTab(tabIndex) {
-      return mainView.activateTab(tabIndex);
+    function activateTab(tabId) {
+      return mainView.activateTab(tabId);
     }
 
-    function removeTab(tabIndex) {
-      return mainView.removeTab(tabIndex);
+    function removeTab(tabId) {
+      return mainView.removeTab(tabId);
     }
 
-    function setTabTitle(tabIndex, title) {
-      return mainView.setTabTitle(tabIndex, title);
+    function setTabTitle(tabId, title) {
+      return mainView.setTabTitle(tabId, title);
     }
 
     menuBar: MenuBar {

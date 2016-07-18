@@ -16,6 +16,9 @@ Item {
 
   property var cellObjects: []
 
+  property var tabsMap: ({})
+
+
   function currentCell() {
     // TODO: Handle current cell?
     var cellItem = cellHolder.itemAt(0);
@@ -34,7 +37,7 @@ Item {
      return tab === undefined ? undefined : tab.item;
   }
 
-  function addTab(view) {
+  function addTab(tabId, view) {
     var cell = currentCell();
     var tab = cell.addTab(Qt.binding(function() {
       console.log("view.title", view.title);
@@ -42,31 +45,40 @@ Item {
     }), tabTemplate);
     console.log("addTab", tab, tab.item);
 
-    var loadTab = function() {
-      tab.item.myView = view;
-    }
+    tabsMap[tabId] = tab;
 
-    if (tab.item != null) {
-      loadTab();
-    } else {
-      tab.loaded.connect(loadTab);
-    }
     tab.active = true;
+
+    var obj = viewTemplate.createObject(tab.item, {myView: view});
   }
 
-  function activateTab(tabIndex) {
-    var cell = currentCell();
-    cell.currentIndex = tabIndex;
+  function activateTab(tabId) {
+    var tab = tabsMap[tabId];
+    var tabView = tab.parent.parent.parent;
+
+    for (var i = 0; i < tabView.count; i++) {
+      if (tabView.getTab(i) == tab) {
+        tabView.currentIndex = i;
+        return;
+      }
+    }
   }
 
-  function removeTab(tabIndex) {
-    var cell = currentCell();
-    cell.removeTab(tabIndex);
+  function removeTab(tabId) {
+    var tab = tabsMap[tabId];
+    var tabView = tab.parent.parent.parent;
+
+    for (var i = 0; i < tabView.count; i++) {
+      if (tabView.getTab(i) == tab) {
+        tabView.removeTab(i);
+        return;
+      }
+    }
   }
 
-  function setTabTitle(tabIndex, title) {
-    var cell = currentCell();
-    cell.getTab(tabIndex).title = title;
+  function setTabTitle(tabId, title) {
+    var tab = tabsMap[tabId];
+    tab.title = title;
   }
 
   Repeater {
@@ -97,24 +109,6 @@ Item {
       Component.onCompleted: {
 
       }
-
-      // onWidthChanged: {
-      //   if (width < 100) return;
-      //
-      //   console.log("Cell %:", index, modelData,  leftPercent, rightPercent, topPercent, bottomPercent);
-      //   console.log("Cell x:", index, modelData,  leftT, rightT, topT, bottomT);
-      //   console.log("Cell s:", index, x, width, y, height);
-      // }
-
-      // Cell {
-      //   id: cellCell
-      //   anchors.fill: parent
-      // }
-
-      // Rectangle{
-      //   color: "blue"
-      //   anchors.fill: parent
-      // }
 
     }
   }

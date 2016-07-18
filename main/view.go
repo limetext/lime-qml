@@ -17,14 +17,16 @@ import (
 // A helper glue structure connecting the backend View with the qml code that
 // then ends up rendering it.
 type view struct {
+	id             int
 	bv             *backend.View
 	qv             qml.Object
 	FormattedLines *linesList
-	Title          lineStruct
+	Title          string
 }
 
 func newView(bv *backend.View) *view {
 	v := &view{
+		id: int(bv.Id()),
 		bv: bv,
 	}
 	return v

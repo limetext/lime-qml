@@ -220,52 +220,50 @@ func (f *frontend) DefaultFg() color.RGBA {
 
 // Called when a new view is opened
 func (f *frontend) onNew(bv *backend.View) {
-	v := newView(bv)
+	w := f.windows[bv.Window()]
+	v := w.addView(bv)
 	bv.AddObserver(v)
 	bv.Settings().AddOnChange("qml.view.syntax", v.onChange)
 
-	v.Title.Text = bv.FileName()
-	if len(v.Title.Text) == 0 {
-		v.Title.Text = "untitled"
+	v.Title = bv.FileName()
+	if len(v.Title) == 0 {
+		v.Title = "untitled"
 	}
 
-	w := f.windows[bv.Window()]
-	w.views = append(w.views, v)
 
 	if w.qw != nil {
-		w.qw.Call("addTab", "", v)
-		w.qw.Call("activateTab", w.ActiveViewIndex())
+		w.qw.Call("addTab", v.id, v)
+		w.qw.Call("activateTab", v.id)
 	}
 }
 
 // called when a view is closed
 func (f *frontend) onClose(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	_, i := w.findView(bv)
-	if i == -1 {
+	v := w.views[bv]
+	if v == nil {
 		log.Error("Couldn't find closed view...")
 		return
 	}
-	w.qw.Call("removeTab", i)
-	copy(w.views[i:], w.views[i+1:])
-	w.views = w.views[:len(w.views)-1]
+	w.qw.Call("removeTab", v.id)
+	delete(w.views, bv)
 }
 
 // called when a view has loaded
 func (f *frontend) onLoad(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	v, i := w.findView(bv)
+	v := w.views[bv]
 	if v == nil {
 		log.Error("Couldn't find loaded view")
 		return
 	}
-	v.Title.Text = bv.FileName()
-	w.qw.Call("setTabTitle", i, v.Title.Text)
+	v.Title = bv.FileName()
+	w.qw.Call("setTabTitle", v.id, v.Title)
 }
 
 func (f *frontend) onSelectionModified(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	v, _ := w.findView(bv)
+	v := w.views[bv]
 	if v == nil {
 		log.Error("Couldn't find modified view")
 		return
@@ -278,7 +276,7 @@ func (f *frontend) onSelectionModified(bv *backend.View) {
 
 func (f *frontend) onStatusChanged(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	v, _ := w.findView(bv)
+	v := w.views[bv]
 	if v == nil {
 		log.Error("Couldn't find status changed view")
 		return
@@ -417,7 +415,7 @@ func (f *frontend) loop() (err error) {
 	}
 
 	addWindow := func(bw *backend.Window) {
-		w := &window{bw: bw}
+		w := newWindow(bw)
 		f.windows[bw] = w
 		w.launch(&wg, component)
 	}
@@ -525,11 +523,10 @@ func (f *frontend) loop() (err error) {
 		for _, w := range f.windows {
 			w.launch(&wg, component)
 
-			for i, bv := range w.Back().Views() {
+			for _, bv := range w.Back().Views() {
 				f.onNew(bv)
 				f.onLoad(bv)
 
-				w.View(i)
 			}
 		}
 	}
