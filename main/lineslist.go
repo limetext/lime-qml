@@ -16,7 +16,11 @@ type linesList struct {
 var _ qml.ItemModelImpl = &linesList{}
 
 func NewLinesList(engine *qml.Engine, parent qml.Object) *linesList {
-	ll := &linesList{}
+	ll := &linesList{
+		lines: make([]*lineStruct, 1, 10),
+	}
+	ll.lines[0] = &lineStruct{} // always have to have at least 1 line
+
 	ll.ItemModel, ll.internal = qml.NewItemModel(engine, parent, ll)
 	return ll
 }

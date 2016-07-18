@@ -73,11 +73,8 @@ func (v *view) Fix(obj qml.Object) {
 
 	})
 
-	if v.bv.Size() > 0 {
-		r := Region{A: 0, B: v.bv.Size()}
-		v.Inserted(nil, r, v.bv.SubstrR(r))
-		return
-	}
+	r := Region{A: 0, B: v.bv.Size()}
+	v.Inserted(nil, r, v.bv.SubstrR(r))
 }
 
 func (v *view) Erased(changed_buffer Buffer, region_removed Region, data_removed []rune) {
