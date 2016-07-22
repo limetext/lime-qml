@@ -10,7 +10,7 @@ import (
 
 	"github.com/limetext/backend/log"
 	_ "github.com/limetext/commands"
-	"github.com/limetext/gopy/lib"
+	"github.com/limetext/gopy"
 	_ "github.com/limetext/sublime"
 )
 
