@@ -44,6 +44,9 @@ type frontend struct {
 	windows        map[*backend.Window]*window
 	Console        *view
 	qmlDispatch    chan qmlDispatch
+
+	promptWaitGroup sync.WaitGroup
+	promptResult    string
 }
 
 // Used for batching qml.Changed calls
@@ -52,7 +55,9 @@ type qmlDispatch struct{ value, field interface{} }
 var fe *frontend
 
 func initFrontend() {
-	fe = &frontend{windows: make(map[*backend.Window]*window)}
+	fe = &frontend{
+		windows: make(map[*backend.Window]*window),
+	}
 	go fe.qmlBatchLoop()
 	qml.Run(fe.loop)
 }
@@ -87,7 +92,7 @@ const (
 	cancelButton = 4194304
 )
 
-func (f *frontend) message(text string, icon, btns int) (ret int) {
+func (f *frontend) message(text string, icon, btns int) string {
 	cbs := make(map[string]int)
 	if btns&okButton != 0 {
 		cbs["accepted"] = 1
@@ -102,21 +107,12 @@ func (f *frontend) message(text string, icon, btns int) (ret int) {
 	obj.Set("icon", icon)
 	obj.Set("standardButtons", btns)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	for key, _ := range cbs {
-		val := cbs[key]
-		obj.On(key, func() {
-			ret = val
-			wg.Done()
-		})
-	}
-	defer obj.Clear()
-
+	f.promptWaitGroup.Add(1)
 	obj.Call("open")
-	wg.Wait()
-	log.Fine("returning %d from dialog", ret)
-	return
+	f.promptWaitGroup.Wait()
+
+	log.Fine("returning %d from dialog", f.promptResult)
+	return f.promptResult
 }
 
 func (f *frontend) ErrorMessage(msg string) {
@@ -129,7 +125,7 @@ func (f *frontend) MessageDialog(msg string) {
 }
 
 func (f *frontend) OkCancelDialog(msg, ok string) bool {
-	return f.message(msg, questionIcon, okButton|cancelButton) == 1
+	return f.message(msg, questionIcon, okButton|cancelButton) == "accepted"
 }
 
 func (f *frontend) Prompt(title, folder string, flags int) []string {
@@ -137,31 +133,18 @@ func (f *frontend) Prompt(title, folder string, flags int) []string {
 	obj := w.qw.ObjectByName("fileDialog")
 	obj.Set("title", title)
 	obj.Set("folder", "file://"+folder)
-	if flags&backend.PROMPT_SAVE_AS != 0 {
-		obj.Set("selectExisting", false)
-	}
-	if flags&backend.PROMPT_ONLY_FOLDER != 0 {
-		obj.Set("selectFolder", true)
-	}
-	if flags&backend.PROMPT_SELECT_MULTIPLE != 0 {
-		obj.Set("selectMultiple", true)
-	}
+	obj.Set("selectExisting", flags&backend.PROMPT_SAVE_AS == 0)
+	obj.Set("selectFolder", flags&backend.PROMPT_ONLY_FOLDER == 1)
+	obj.Set("selectMultiple", flags&backend.PROMPT_SELECT_MULTIPLE == 1)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	rejected := false
-	obj.On("accepted", wg.Done)
-	obj.On("rejected", func() {
-		rejected = true
-		wg.Done()
-	})
-	defer obj.Clear()
-
+	f.promptWaitGroup.Add(1)
 	obj.Call("open")
-	wg.Wait()
-	if rejected {
+	f.promptWaitGroup.Wait()
+
+	if f.promptResult != "accepted" {
 		return nil
 	}
+
 	res := obj.List("fileUrls")
 	files := make([]string, res.Len())
 	res.Convert(&files)
@@ -172,6 +155,11 @@ func (f *frontend) Prompt(title, folder string, flags int) []string {
 	}
 	log.Debug("Selected %s files", files)
 	return files
+}
+
+func (f *frontend) PromptClosed(result string) {
+	f.promptResult = result
+	f.promptWaitGroup.Done()
 }
 
 func (f *frontend) scroll(b Buffer) {

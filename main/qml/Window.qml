@@ -249,8 +249,18 @@ ApplicationWindow {
     }
     MessageDialog {
         objectName: "messageDialog"
+        onAccepted: frontend.promptClosed("accepted")
+        onApply: frontend.promptClosed("apply")
+        onDiscard: frontend.promptClosed("discard")
+        onHelp: frontend.promptClosed("help")
+        onNo: frontend.promptClosed("no")
+        onRejected: frontend.promptClosed("rejected")
+        onReset: frontend.promptClosed("reset")
+        onYes: frontend.promptClosed("yes")
     }
     FileDialog {
         objectName: "fileDialog"
+        onAccepted: frontend.promptClosed("accepted")
+        onRejected: frontend.promptClosed("rejected")
     }
 }
