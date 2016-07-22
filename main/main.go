@@ -11,6 +11,7 @@ import (
 	"github.com/limetext/backend/log"
 	_ "github.com/limetext/commands"
 	"github.com/limetext/gopy"
+	"github.com/limetext/qml-go"
 	_ "github.com/limetext/sublime"
 )
 
@@ -27,6 +28,8 @@ func main() {
 		py.NewLock()
 		py.Finalize()
 	}()
+
+	qml.SetApplicationName("LimeText")
 
 	initFrontend()
 }

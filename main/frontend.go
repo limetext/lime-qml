@@ -401,6 +401,10 @@ func (f *frontend) loop() (err error) {
 		log.Fine("setvar frontend")
 		engine.Context().SetVar("frontend", f)
 
+		qml.SetApplicationDisplayName("LimeText")
+		qml.SetWindowIcon("qml/lime.png")
+		qml.SetDesktopFileName("qml/org.limetext.qml.LimeText.desktop")
+
 		log.Fine("loading %s", qmlWindowFile)
 		component, err = engine.LoadFile(qmlWindowFile)
 		return

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LimeText
+Comment=Lime Text code editor
+TryExec=main
+Exec=main %F
+Icon=lime.png
+MimeType=image/x-foo;
