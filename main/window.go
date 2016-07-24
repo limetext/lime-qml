@@ -15,7 +15,7 @@ import (
 type window struct {
 	bw    *backend.Window
 	qw    *qml.Window
-	views       map[*backend.View]*view
+	views map[*backend.View]*view
 }
 
 func newWindow(bw *backend.Window) *window {
@@ -53,4 +53,3 @@ func (w *window) addView(bv *backend.View) *view {
 func (w *window) Back() *backend.Window {
 	return w.bw
 }
-

@@ -160,7 +160,6 @@ func (v *view) formatLine(linenum int, line *lineStruct) {
 	defer prof.Exit()
 
 	vr := v.bv.Line(v.bv.TextPoint(linenum, 0))
-
 	if vr.Size() == 0 {
 		if line.Text != "" {
 			line.Text = ""
@@ -170,10 +169,6 @@ func (v *view) formatLine(linenum int, line *lineStruct) {
 		return
 	}
 	recipie := v.bv.Transform(vr).Transcribe()
-	highlight_line := false
-	if b, ok := v.bv.Settings().Get("highlight_line", highlight_line).(bool); ok {
-		highlight_line = b
-	}
 	lastEnd := vr.Begin()
 
 	chunks := line.Chunks

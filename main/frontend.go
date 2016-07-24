@@ -230,7 +230,6 @@ func (f *frontend) onNew(bv *backend.View) {
 		v.Title = "untitled"
 	}
 
-
 	if w.qw != nil {
 		w.qw.Call("addTab", v.id, v)
 		w.qw.Call("activateTab", v.id)
@@ -337,7 +336,7 @@ func (f *frontend) HandleInput(text string, keycode int, modifiers int) bool {
 
 func (f *frontend) ColorScheme() backend.ColorScheme {
 	ed := backend.GetEditor()
-	return ed.GetColorScheme(ed.Settings().Get("color_scheme", "").(string))
+	return ed.GetColorScheme(ed.Settings().String("color_scheme", ""))
 }
 
 // Quit closes all open windows to de-reference all qml objects

@@ -11,8 +11,6 @@ import:
   version: master
 - package: github.com/limetext/gopy
   version: master
-  subpackages:
-  - lib
 - package: github.com/limetext/qml-go
   version: master
 - package: github.com/limetext/sublime
