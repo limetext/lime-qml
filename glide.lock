@@ -31,9 +31,9 @@ imports:
   - qpainter
   - gl/glbase
 - name: github.com/limetext/rubex
-  version: mastermaster
+  version: master
 - name: github.com/limetext/sublime
-  version: mastermaster
+  version: master
   subpackages:
   - api
   - textmate/language
