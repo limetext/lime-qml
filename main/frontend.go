@@ -37,20 +37,21 @@ const (
 	keypad_mod = 0x20000000
 )
 
-// keeping track of frontend state
-type frontend struct {
-	status_message string
-	lock           sync.Mutex
-	windows        map[*backend.Window]*window
-	Console        *view
-	qmlDispatch    chan qmlDispatch
+type (
+	// keeping track of frontend state
+	frontend struct {
+		lock        sync.Mutex
+		windows     map[*backend.Window]*window
+		Console     *view
+		qmlDispatch chan qmlDispatch
 
-	promptWaitGroup sync.WaitGroup
-	promptResult    string
-}
+		promptWaitGroup sync.WaitGroup
+		promptResult    string
+	}
 
-// Used for batching qml.Changed calls
-type qmlDispatch struct{ value, field interface{} }
+	// Used for batching qml.Changed calls
+	qmlDispatch struct{ value, field interface{} }
+)
 
 var fe *frontend
 
@@ -62,7 +63,7 @@ func initFrontend() {
 	qml.Run(fe.loop)
 }
 
-func (f *frontend) Window(w *backend.Window) *window {
+func (f *frontend) window(w *backend.Window) *window {
 	return f.windows[w]
 }
 
@@ -76,9 +77,12 @@ func (f *frontend) VisibleRegion(bv *backend.View) Region {
 }
 
 func (f *frontend) StatusMessage(msg string) {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-	f.status_message = msg
+	w := f.windows[backend.GetEditor().ActiveWindow()]
+	w.qw.Call("setFrontendStatus", msg)
+	go func() {
+		time.Sleep(5 * time.Second)
+		w.qw.Call("setFrontendStatus", "")
+	}()
 }
 
 const (
@@ -153,7 +157,7 @@ func (f *frontend) Prompt(title, folder string, flags int) []string {
 			files[i] = file[7:]
 		}
 	}
-	log.Debug("Selected %s files", files)
+	log.Fine("Selected %s files", files)
 	return files
 }
 
@@ -207,13 +211,13 @@ func (f *frontend) qmlChanged(value, field interface{}) {
 }
 
 func (f *frontend) DefaultBg() color.RGBA {
-	c := f.ColorScheme().Spice(&render.ViewRegions{})
+	c := f.colorScheme().Spice(&render.ViewRegions{})
 	c.Background.A = 0xff
 	return color.RGBA(c.Background)
 }
 
 func (f *frontend) DefaultFg() color.RGBA {
-	c := f.ColorScheme().Spice(&render.ViewRegions{})
+	c := f.colorScheme().Spice(&render.ViewRegions{})
 	c.Foreground.A = 0xff
 	return color.RGBA(c.Foreground)
 }
@@ -334,7 +338,7 @@ func (f *frontend) HandleInput(text string, keycode int, modifiers int) bool {
 	return false
 }
 
-func (f *frontend) ColorScheme() backend.ColorScheme {
+func (f *frontend) colorScheme() backend.ColorScheme {
 	ed := backend.GetEditor()
 	return ed.GetColorScheme(ed.Settings().String("color_scheme", ""))
 }

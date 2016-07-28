@@ -15,23 +15,35 @@ ApplicationWindow {
     property string themeFolder: "../../packages/Soda/Soda Dark"
 
     function view() {
-      return mainView.view();
+        return mainView.view();
     }
 
     function addTab(tabId, view) {
-      return mainView.addTab(tabId, view);
+        return mainView.addTab(tabId, view);
     }
 
     function activateTab(tabId) {
-      return mainView.activateTab(tabId);
+        return mainView.activateTab(tabId);
     }
 
     function removeTab(tabId) {
-      return mainView.removeTab(tabId);
+        return mainView.removeTab(tabId);
     }
 
     function setTabTitle(tabId, title) {
-      return mainView.setTabTitle(tabId, title);
+        return mainView.setTabTitle(tabId, title);
+    }
+
+    function setFrontendStatus(text) {
+        frontendStatus.text = text
+    }
+
+    function setIndentStatus(text) {
+        indentStatus.text = text
+    }
+
+    function setSyntaxStatus(text) {
+        syntaxStatus.text = text
     }
 
     menuBar: MenuBar {
@@ -79,8 +91,8 @@ ApplicationWindow {
             MenuSeparator{}
             MenuItem {
                 text: qsTr("Quit")
-            		// TODO: frontend.runCommand("quit");
-            		onTriggered: Qt.quit();
+                // TODO: frontend.runCommand("quit");
+                onTriggered: Qt.quit();
             }
         }
         Menu {
@@ -134,10 +146,10 @@ ApplicationWindow {
             MenuItem {
                 text: qsTr("Show/Hide Minimap")
                 onTriggered: {
-                  var tab = tabs.getTab(tabs.currentIndex);
+                    var tab = tabs.getTab(tabs.currentIndex);
 
-                  if (tab.item)
-                    tab.item.minimapVisible = !tab.item.minimapVisible;
+                    if (tab.item)
+                        tab.item.minimapVisible = !tab.item.minimapVisible;
                 }
             }
             MenuItem {
@@ -148,105 +160,85 @@ ApplicationWindow {
     }
 
     property Tab currentTab: mainView.currentTab()
-    property var statusBarMap: (currentTab == null || currentTab.item == null) ? null : currentTab.item.statusBar
-    property var statusBarSorted: []
-    onStatusBarMapChanged: {
-      if (statusBarMap == null) {
-        statusBarSorted = [["a", "git branch: master"], ["b", "INSERT MODE"], ["c", "Line xx, Column yy"]];
-        return;
-      }
-
-      console.log("status bar map:", statusBarMap);
-      var keys = Object.keys(statusBarMap);
-      keys.sort();
-      console.log("status bar keys:", keys);
-      var sorted = [];
-      for (var i = 0; i < keys.length; i++)
-        sorted.push([keys[i], statusBarMap[keys[i]]]);
-
-      statusBarSorted = sorted;
+    Component {
+        id: tabTemplate
+        View {}
     }
 
+    Item {
+        anchors.fill: parent
+        Keys.onPressed: {
+            var v = view(); if (v === undefined) return;
+            v.ctrl = (event.key == Qt.Key_Control) ? true : false;
+            event.accepted = frontend.handleInput(event.text, event.key, event.modifiers)
+            event.accepted = true;
+        }
+        Keys.onReleased: {
+            var v = view(); if (v === undefined) return;
+            v.ctrl = (event.key == Qt.Key_Control) ? false : view().ctrl;
+        }
+        focus: true // Focus required for Keys.onPressed
+        SplitView {
+            anchors.fill: parent
+            orientation: Qt.Vertical
+            MainView {
+                id: mainView
+            }
+            View {
+                id: consoleView
+                myView: frontend.console
+                visible: false
+                minimapVisible: false
+                height: 100
+            }
+        }
+    }
 
     statusBar: StatusBar {
         id: statusBar
+        property color textColor: "#969696"
+
         style: StatusBarStyle {
             background: Image {
-              source: themeFolder + "/status-bar-background.png"
+                source: themeFolder + "/status-bar-background.png"
             }
         }
 
-        property color textColor: "#969696"
-
         RowLayout {
             anchors.fill: parent
-            id: statusBarRowLayout
             spacing: 15
 
             RowLayout {
                 anchors.fill: parent
                 spacing: 3
                 Repeater {
-                  model: statusBarSorted
-                  delegate:
+                    model: statusBarSorted
+                    delegate:
                     Label {
                         text: modelData[1]
                         color: statusBar.textColor
                     }
                 }
+                Label {
+                    id: frontendStatus
+                    color: statusBar.textColor
+                }
             }
 
             Label {
-                id: statusBarIndent
-                text: "Tab Size/Spaces: 4"
+                id: indentStatus
                 color: statusBar.textColor
                 Layout.alignment: Qt.AlignRight
             }
 
             Label {
-                id: statusBarLanguage
-                text: "Go"
+                id: syntaxStatus
                 color: statusBar.textColor
                 Layout.alignment: Qt.AlignRight
             }
         }
     }
 
-    Component {
-      id: tabTemplate
-
-      View {}
-    }
-
-    Item {
-        anchors.fill: parent
-        Keys.onPressed: {
-          var v = view(); if (v === undefined) return;
-          v.ctrl = (event.key == Qt.Key_Control) ? true : false;
-          event.accepted = frontend.handleInput(event.text, event.key, event.modifiers)
-          // if (event.key == Qt.Key_Alt)
-          event.accepted = true;
-        }
-        Keys.onReleased: {
-          var v = view(); if (v === undefined) return;
-          v.ctrl = (event.key == Qt.Key_Control) ? false : view().ctrl;
-        }
-        focus: true // Focus required for Keys.onPressed
-        SplitView {
-            anchors.fill: parent
-            orientation: Qt.Vertical
-              MainView {
-                id: mainView
-              }
-              View {
-                id: consoleView
-                myView: frontend.console
-                visible: false
-                minimapVisible: false
-                height: 100
-              }
-        }
-    }
     MessageDialog {
         objectName: "messageDialog"
         onAccepted: frontend.promptClosed("accepted")
@@ -258,6 +250,7 @@ ApplicationWindow {
         onReset: frontend.promptClosed("reset")
         onYes: frontend.promptClosed("yes")
     }
+
     FileDialog {
         objectName: "fileDialog"
         onAccepted: frontend.promptClosed("accepted")

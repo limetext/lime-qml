@@ -41,11 +41,10 @@ func (w *window) launch(wg *sync.WaitGroup, component qml.Object) {
 }
 
 func (w *window) addView(bv *backend.View) *view {
-	v := w.views[bv]
-	if v != nil {
+	if v := w.views[bv]; v != nil {
 		return v
 	}
-	v = newView(bv)
+	v := newView(bv)
 	w.views[bv] = v
 	return v
 }

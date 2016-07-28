@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/limetext/backend"
 	"github.com/limetext/backend/render"
@@ -29,6 +30,23 @@ func newView(bv *backend.View) *view {
 		id: int(bv.Id()),
 		bv: bv,
 	}
+	bv.Settings().AddOnChange("qml.view.syntax", func(name string) {
+		if name != "syntax" {
+			return
+		}
+		syn := bv.Settings().String("syntax", "Plain Text")
+		syntax := backend.GetEditor().GetSyntax(syn)
+		w := fe.windows[bv.Window()]
+		w.qw.Call("setSyntaxStatus", syntax.Name())
+	})
+	bv.Settings().AddOnChange("qml.view.tabSize", func(name string) {
+		if name != "tab_size" {
+			return
+		}
+		ts := bv.Settings().Int("tab_size", 4)
+		w := fe.windows[bv.Window()]
+		w.qw.Call("setIndentStatus", strconv.Itoa(ts))
+	})
 	return v
 }
 
