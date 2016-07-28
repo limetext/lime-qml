@@ -1,10 +1,10 @@
-hash: a2f2afeb7ed98fd72bd7f2ee8e9e7ee7c848adf4a12fbb81c71d0ee725b6b0af
-updated: 2016-07-24T12:34:59.298069382+04:30
+hash: 94e6be721226a2a287006d5af2a2964273de83cc96453318f5694e978bcf7d5a
+updated: 2016-07-28T23:32:49.785290372+04:30
 imports:
 - name: github.com/atotto/clipboard
   version: bb272b845f1112e10117e3e45ce39f690c0001ad
 - name: github.com/limetext/backend
-  version: 939942b400fcb70591aa8400fa4ea8535c3cca22
+  version: master
   subpackages:
   - keys
   - log
@@ -13,36 +13,36 @@ imports:
   - parser
   - watch
 - name: github.com/limetext/commands
-  version: 2808c7f5866a4b4b03519a9a8f89ef9c1cd5cda9
+  version: master
 - name: github.com/limetext/gopy
-  version: 8794df5582d0d3c9bba659ee4e097c75bbf90b97
+  version: master
 - name: github.com/limetext/loaders
-  version: 06edf5a137bbe153db6c5e1438bc896e1c4df307
+  version: master
   subpackages:
   - json
   - plist
 - name: github.com/limetext/log4go
-  version: 41f52bba2191d3bfa764c6867968eb06acbd8f3c
+  version: master
 - name: github.com/limetext/qml-go
-  version: e6b4b95ba23bc8f05d57cda2635dc2d7c64e78ea
+  version: master
   subpackages:
   - cdata
   - internal/util
   - qpainter
   - gl/glbase
 - name: github.com/limetext/rubex
-  version: 06adcbb38bcc95987997894b1de33e7502bc1933
+  version: mastermaster
 - name: github.com/limetext/sublime
-  version: 8b596b05f93c8f2e98d21a2858571141c6d9e015
+  version: mastermaster
   subpackages:
   - api
-  - internal/textmate/language
-  - internal/textmate/theme
-  - internal
+  - textmate/language
+  - textmate/theme
+  - textmate
 - name: github.com/limetext/text
-  version: 3749fa7cf58d53bb356d0f85fecf0a2b52f579be
+  version: master
 - name: github.com/limetext/util
-  version: 20e1a4a3505f50a45c7f92456d889d899272ac14
+  version: master
 - name: github.com/quarnster/parser
   version: 8991807ce6d383a41077a642b7b381eba1df7064
 - name: gopkg.in/fsnotify.v1
