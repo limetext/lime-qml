@@ -27,10 +27,16 @@ type view struct {
 
 func newView(bv *backend.View) *view {
 	v := &view{
-		id: int(bv.Id()),
-		bv: bv,
+		id:    int(bv.Id()),
+		bv:    bv,
+		Title: bv.FileName(),
 	}
-	bv.Settings().AddOnChange("qml.view.syntax", func(name string) {
+	if len(v.Title) == 0 {
+		v.Title = "untitled"
+	}
+	bv.AddObserver(v)
+	bv.Settings().AddOnChange("qml.view.syntax", v.onChange)
+	bv.Settings().AddOnChange("qml.view.syntaxfile", func(name string) {
 		if name != "syntax" {
 			return
 		}

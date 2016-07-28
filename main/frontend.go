@@ -225,15 +225,8 @@ func (f *frontend) DefaultFg() color.RGBA {
 // Called when a new view is opened
 func (f *frontend) onNew(bv *backend.View) {
 	w := f.windows[bv.Window()]
-	v := w.addView(bv)
-	bv.AddObserver(v)
-	bv.Settings().AddOnChange("qml.view.syntax", v.onChange)
-
-	v.Title = bv.FileName()
-	if len(v.Title) == 0 {
-		v.Title = "untitled"
-	}
-
+	v := newView(bv)
+	w.views[bv] = v
 	if w.qw != nil {
 		w.qw.Call("addTab", v.id, v)
 		w.qw.Call("activateTab", v.id)
