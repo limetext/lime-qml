@@ -30,11 +30,6 @@ ApplicationWindow {
         return mainView.setTabTitle(tabId, title);
     }
 
-    function setFrontendStatus(text) {
-        frontendStatus.text = text
-    }
-
-
     menuBar: MenuBar {
         id: menu
         Menu {
@@ -206,20 +201,18 @@ ApplicationWindow {
                     }
                 }
                 Label {
-                    id: frontendStatus
+                    text: frontend.status
                     color: statusBar.textColor
                 }
             }
 
             Label {
-                id: indentStatus
                 color: statusBar.textColor
                 Layout.alignment: Qt.AlignRight
                 text: currentView && currentView.myView ? currentView.myView.tabSize : "0"
             }
 
             Label {
-                id: syntaxStatus
                 color: statusBar.textColor
                 Layout.alignment: Qt.AlignRight
                 text: currentView && currentView.myView ? currentView.myView.syntaxName : "0"

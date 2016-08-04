@@ -43,6 +43,7 @@ type (
 		windows     map[*backend.Window]*window
 		Console     *view
 		qmlDispatch chan qmlDispatch
+		Status      string
 
 		promptWaitGroup sync.WaitGroup
 		promptResult    string
@@ -76,12 +77,15 @@ func (f *frontend) VisibleRegion(bv *backend.View) Region {
 }
 
 func (f *frontend) StatusMessage(msg string) {
-	w := f.windows[backend.GetEditor().ActiveWindow()]
-	w.qw.Call("setFrontendStatus", msg)
-	go func() {
+	f.Status = msg
+	f.qmlChanged(f, &f.Status)
+	go func(msg string) {
 		time.Sleep(5 * time.Second)
-		w.qw.Call("setFrontendStatus", "")
-	}()
+		if f.Status == msg {
+			f.Status = ""
+			f.qmlChanged(f, &f.Status)
+		}
+	}(msg)
 }
 
 const (
