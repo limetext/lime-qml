@@ -1,5 +1,5 @@
-hash: 94e6be721226a2a287006d5af2a2964273de83cc96453318f5694e978bcf7d5a
-updated: 2016-07-28T23:32:49.785290372+04:30
+hash: aefc9f5f9214e4ff75f812de48b1fc9251ad8acbf3bf6a332f306a45704ff33b
+updated: 2016-08-12T21:00:49.083649551+01:00
 imports:
 - name: github.com/atotto/clipboard
   version: bb272b845f1112e10117e3e45ce39f690c0001ad
@@ -8,9 +8,9 @@ imports:
   subpackages:
   - keys
   - log
-  - render
   - packages
   - parser
+  - render
   - watch
 - name: github.com/limetext/commands
   version: master
@@ -27,24 +27,28 @@ imports:
   version: master
   subpackages:
   - cdata
+  - gl/glbase
   - internal/util
   - qpainter
-  - gl/glbase
 - name: github.com/limetext/rubex
   version: master
 - name: github.com/limetext/sublime
   version: master
   subpackages:
   - api
+  - textmate
   - textmate/language
   - textmate/theme
-  - textmate
 - name: github.com/limetext/text
   version: master
 - name: github.com/limetext/util
   version: master
 - name: github.com/quarnster/parser
   version: 8991807ce6d383a41077a642b7b381eba1df7064
+- name: golang.org/x/sys
+  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  subpackages:
+  - unix
 - name: gopkg.in/fsnotify.v1
-  version: 836bfd95fecc0f1511dd66bdbf2b5b61ab8b00b6
+  version: a8a77c9133d2d6fd8334f3260d06f60e8d80a5fb
 testImports: []
