@@ -19,6 +19,15 @@ Item {
   property var tabsMap: ({})
 
 
+
+  Component {
+    id: viewTemplate
+    View {
+      id: tabView
+      anchors.fill: parent
+    }
+  }
+  
   function currentCell() {
     // TODO: Handle current cell?
     var cellItem = cellHolder.itemAt(0);
