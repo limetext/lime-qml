@@ -5,6 +5,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/limetext/backend"
@@ -13,9 +15,10 @@ import (
 
 // A helper glue structure connecting the backend Window with the qml.Window
 type window struct {
-	bw    *backend.Window
-	qw    *qml.Window
-	views map[*backend.View]*view
+	bw          *backend.Window
+	qw          *qml.Window
+	views       map[*backend.View]*view
+	SidebarTree *TreeListModel
 }
 
 func newWindow(bw *backend.Window) *window {
@@ -30,6 +33,13 @@ func newWindow(bw *backend.Window) *window {
 // once the window closes.
 func (w *window) launch(wg *sync.WaitGroup, component qml.Object) {
 	wg.Add(1)
+
+	me, _ := filepath.Abs(os.Args[0])
+
+	root := &FSTreeItem{path: filepath.Dir(me)}
+
+	w.SidebarTree = NewTreeListModel(component.Common().Engine(), nil, root.Children())
+
 	w.qw = component.CreateWindow(nil)
 	w.qw.Show()
 	w.qw.Set("myWindow", w)

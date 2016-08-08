@@ -11,6 +11,10 @@ ApplicationWindow {
     height: 600
     title: "Lime"
 
+    Component.onCompleted: {
+      Qt.application.name = "LimeTextQML"
+    }
+
     property var myWindow
     property string themeFolder: "../../packages/Soda/Soda Dark"
 
@@ -167,8 +171,18 @@ ApplicationWindow {
         SplitView {
             anchors.fill: parent
             orientation: Qt.Vertical
-            MainView {
-                id: mainView
+            SplitView {
+                anchors.fill: parent
+                orientation: Qt.Horizontal
+                Sidebar {
+                  id: sidebarView
+                  width: 200
+                  sidebarTree: myWindow.sidebarTree
+                }
+                MainView {
+                  id: mainView
+                  Layout.fillWidth: true
+                }
             }
             View {
                 id: consoleView
@@ -179,6 +193,7 @@ ApplicationWindow {
             }
         }
     }
+
 
     statusBar: StatusBar {
         id: statusBar
@@ -226,6 +241,7 @@ ApplicationWindow {
             }
         }
     }
+
 
     MessageDialog {
         objectName: "messageDialog"
