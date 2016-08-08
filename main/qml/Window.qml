@@ -160,10 +160,7 @@ ApplicationWindow {
     }
 
     property Tab currentTab: mainView.currentTab()
-    Component {
-        id: tabTemplate
-        View {}
-    }
+    
 
     Item {
         anchors.fill: parent

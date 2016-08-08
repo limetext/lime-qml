@@ -34,7 +34,7 @@ Item {
   Component.onCompleted: {
     if (myView) {
       // console.log("myView onCompleted");
-      // updateMyView();
+      updateMyView();
     }
   }
   onMyViewChanged: {
@@ -42,7 +42,6 @@ Item {
   }
 
   function updateMyView() {
-      console.log("Buffer: updateMyView: ", myView);
       // linesModel.clear();
       if (myView) {
         myView.fix(viewRoot);

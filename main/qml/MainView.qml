@@ -18,7 +18,10 @@ Item {
 
   property var tabsMap: ({})
 
-
+  Component {
+      id: tabTemplate
+      Item {}
+  }
 
   Component {
     id: viewTemplate
@@ -27,7 +30,7 @@ Item {
       anchors.fill: parent
     }
   }
-  
+
   function currentCell() {
     // TODO: Handle current cell?
     var cellItem = cellHolder.itemAt(0);
@@ -43,7 +46,11 @@ Item {
 
   function view() {
     var tab = currentTab();
-     return tab === undefined ? undefined : tab.item;
+     return tab === undefined ? undefined : getViewFromTab(tab);
+  }
+
+  function getViewFromTab(tab) {
+    return tab.item.children[0];
   }
 
   function addTab(tabId, view) {
@@ -52,7 +59,6 @@ Item {
       console.log("view.title", view.title);
       return view.title? view.title : "untitled";
     }), tabTemplate);
-    console.log("addTab", tab, tab.item);
 
     tabsMap[tabId] = tab;
 
@@ -116,7 +122,7 @@ Item {
       height: bottomT - y - (bottomPercent > 0.99 ? 0 : 2)
 
       onCurrentIndexChanged: {
-        getTab(currentIndex).item.children[0].myView.setActive();
+        getViewFromTab(getTab(currentIndex)).myView.setActive();
       }
 
     }

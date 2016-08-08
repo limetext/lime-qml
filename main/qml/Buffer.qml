@@ -355,7 +355,7 @@ Item {
                     if (point.p != null && point.p != point.r) {
                         // Remove the last region and replace it with new one
                         var r = selection.get(selection.len()-1);
-                        selection.substract(r);
+                        selection.subtract(r);
                         selection.add(myView.region(point.p, point.r));
                         onSelectionModified();
                     }
