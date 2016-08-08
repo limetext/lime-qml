@@ -169,7 +169,18 @@ func (v *view) Inserted(changed_buffer Buffer, region_inserted Region, data_inse
 	}
 }
 
+func (v *view) GetSetting(name string) interface{} {
+	return v.bv.Settings().Get(name)
+}
+
+func (v *view) HasSetting(name string) bool {
+	return v.bv.Settings().Has(name)
+}
+
 func (v *view) onChange(name string) {
+	if v.qv != nil {
+		v.qv.ObjectByName("viewSettings").Call("settingChanged", name, v.bv.Settings().Get(name))
+	}
 	if name != "lime.syntax.updated" {
 		return
 	}

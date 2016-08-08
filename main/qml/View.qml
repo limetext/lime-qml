@@ -10,7 +10,7 @@ Item {
   id: viewRoot
 
   property var myView
-  property int fontSize: 10
+  property int fontSize: viewSettings.fontSize
   property string fontFace: "Monospace"
   property var cursor: Qt.IBeamCursor
   property bool ctrl: false
@@ -93,5 +93,13 @@ Item {
         cursor: viewRoot.cursor
         ctrl: viewRoot.ctrl
     }
+  }
+
+  Settings {
+    id: viewSettings
+    objectName: "viewSettings"
+    settingsObject: myView
+
+    property int fontSize: settingInt("font_size", 10)
   }
 }
