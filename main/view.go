@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/limetext/backend"
 	"github.com/limetext/backend/render"
@@ -23,6 +22,13 @@ type view struct {
 	qv             qml.Object
 	FormattedLines *linesList
 	Title          string
+
+	// these setting: tags are merely for ease of reading, they aren't actually used
+	TabSize    int    `setting:"tab_size"`
+	SyntaxName string `setting:"syntax"`
+
+	FontSize int    `setting:"font_size"`
+	FontFace string `setting:"font_face"`
 }
 
 func newView(bv *backend.View) *view {
@@ -35,24 +41,7 @@ func newView(bv *backend.View) *view {
 		v.Title = "untitled"
 	}
 	bv.AddObserver(v)
-	bv.Settings().AddOnChange("qml.view.syntax", v.onChange)
-	bv.Settings().AddOnChange("qml.view.syntaxfile", func(name string) {
-		if name != "syntax" {
-			return
-		}
-		syn := bv.Settings().String("syntax", "Plain Text")
-		syntax := backend.GetEditor().GetSyntax(syn)
-		w := fe.windows[bv.Window()]
-		w.qw.Call("setSyntaxStatus", syntax.Name())
-	})
-	bv.Settings().AddOnChange("qml.view.tabSize", func(name string) {
-		if name != "tab_size" {
-			return
-		}
-		ts := bv.Settings().Int("tab_size", 4)
-		w := fe.windows[bv.Window()]
-		w.qw.Call("setIndentStatus", strconv.Itoa(ts))
-	})
+	bv.Settings().AddOnChange("qml.view", v.onSettingChange)
 	return v
 }
 
@@ -169,24 +158,34 @@ func (v *view) Inserted(changed_buffer Buffer, region_inserted Region, data_inse
 	}
 }
 
-func (v *view) GetSetting(name string) interface{} {
-	return v.bv.Settings().Get(name)
-}
+func (v *view) onSettingChange(name string) {
+	settings := v.bv.Settings()
 
-func (v *view) HasSetting(name string) bool {
-	return v.bv.Settings().Has(name)
-}
+	switch name {
+	case "lime.syntax.updated":
+		// force redraw, as the syntax regions might have changed...
+		for i := 0; i < v.FormattedLines.len(); i++ {
+			v.formatLine(i, v.FormattedLines.get(i))
+		}
 
-func (v *view) onChange(name string) {
-	if v.qv != nil {
-		v.qv.ObjectByName("viewSettings").Call("settingChanged", name, v.bv.Settings().Get(name))
-	}
-	if name != "lime.syntax.updated" {
-		return
-	}
-	// force redraw, as the syntax regions might have changed...
-	for i := 0; i < v.FormattedLines.len(); i++ {
-		v.formatLine(i, v.FormattedLines.get(i))
+	case "syntax":
+		syn := settings.String("syntax", "Plain Text")
+		syntax := backend.GetEditor().GetSyntax(syn)
+		v.SyntaxName = syntax.Name()
+		fe.qmlChanged(v, &v.SyntaxName)
+
+	case "tab_size":
+		v.TabSize = settings.Int("tab_size", 4)
+		fe.qmlChanged(v, &v.TabSize)
+
+	case "font_size":
+		v.FontSize = settings.Int("font_size", 10)
+		fe.qmlChanged(v, &v.FontSize)
+
+	case "font_face":
+		v.FontFace = settings.String("font_face", "Monospace")
+		fe.qmlChanged(v, &v.FontFace)
+
 	}
 }
 
