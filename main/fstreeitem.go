@@ -80,5 +80,9 @@ func (f *FSTreeItem) Click() {
 }
 
 func (f *FSTreeItem) SetVisible(vis bool) {
-	fmt.Println("Visible: ", f.name, vis)
+	// fmt.Println("Visible: ", f.name, vis)
+}
+
+func (f *FSTreeItem) SetExpanded(vis bool) {
+	// fmt.Println("Expanded: ", f.name, vis)
 }

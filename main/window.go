@@ -5,8 +5,6 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/limetext/backend"
@@ -34,11 +32,15 @@ func newWindow(bw *backend.Window) *window {
 func (w *window) launch(wg *sync.WaitGroup, component qml.Object) {
 	wg.Add(1)
 
-	me, _ := filepath.Abs(os.Args[0])
+	project := w.Back().OpenProject("testproj.sublime-project")
 
-	root := &FSTreeItem{path: filepath.Dir(me)}
+	// me, _ := filepath.Abs(os.Args[0])
 
-	w.SidebarTree = NewTreeListModel(component.Common().Engine(), nil, []TreeListItem{root})
+	filesHeader := &HeaderItem{name: "files"}
+	// root := &FSTreeItem{path: filepath.Dir(me), isDir: true}
+	proj := &ProjectItem{Project: project}
+
+	w.SidebarTree = NewTreeListModel(component.Common().Engine(), nil, []TreeListItem{filesHeader, proj})
 
 	w.qw = component.CreateWindow(nil)
 	w.qw.Show()

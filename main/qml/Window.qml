@@ -177,7 +177,7 @@ ApplicationWindow {
                 Sidebar {
                   id: sidebarView
                   width: 200
-                  sidebarTree: myWindow.sidebarTree
+                  sidebarTree: myWindow && myWindow.sidebarTree
                 }
                 MainView {
                   id: mainView

@@ -15,7 +15,7 @@ Rectangle {
     id: listView
 
     anchors.fill: parent
-    model: sidebarTree.model
+    model: sidebarTree && sidebarTree.model
     focus: true
     interactive: false
     // keyNavigationEnabled: true
