@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/limetext/backend"
 	"github.com/limetext/backend/render"
@@ -39,8 +38,6 @@ func newView(bv *backend.View) *view {
 		id:    int(bv.Id()),
 		bv:    bv,
 		Title: bv.FileName(),
-
-		watchedSettings: make(map[string]watchedSetting),
 	}
 	if len(v.Title) == 0 {
 		v.Title = "untitled"
@@ -48,15 +45,17 @@ func newView(bv *backend.View) *view {
 	bv.AddObserver(v)
 	bv.Settings().AddOnChange("qml.view", v.onSettingChange)
 
-	v.watchSetting("tab_size", (*Settings).Int, &v.TabSize, 4)
-	v.watchSetting("syntax", (*Settings).String, &v.SyntaxName, "Plain Text", func(syn string) string {
+	watcher := newSettingsWatcher(v, bv.Settings())
+
+	watcher.watchSettingInt("tab_size", &v.TabSize, 4)
+	watcher.watchSettingString("syntax", &v.SyntaxName, "Plain Text", func(syn string) string {
 		if syntax := backend.GetEditor().GetSyntax(syn); syntax != nil {
 			return syntax.Name()
 		}
 		return syn
 	})
-	v.watchSetting("font_size", (*Settings).Int, &v.FontSize, 10)
-	v.watchSetting("font_face", (*Settings).String, &v.FontFace, "Monospace")
+	watcher.watchSettingInt("font_size", &v.FontSize, 10)
+	watcher.watchSettingString("font_face", &v.FontFace, "Monospace")
 
 	return v
 }
@@ -174,49 +173,9 @@ func (v *view) Inserted(changed_buffer Buffer, region_inserted Region, data_inse
 	}
 }
 
-type watchedSetting struct {
-	name         string
-	fn           reflect.Value
-	ptr          reflect.Value
-	defaultValue interface{}
-	mapFn        reflect.Value
-}
-
-func (v *view) watchSetting(name string, fn interface{}, ptr interface{}, defaultValue interface{}, mapFn ...interface{}) {
-	s := watchedSetting{
-		name:         name,
-		fn:           reflect.ValueOf(fn),
-		ptr:          reflect.ValueOf(ptr),
-		defaultValue: defaultValue,
-	}
-	if len(mapFn) == 1 {
-		s.mapFn = reflect.ValueOf(mapFn[0])
-	}
-	v.watchedSettings[name] = s
-	s.setFromSettings(v, v.Back().Settings())
-}
-
-func (s *watchedSetting) setFromSettings(v *view, settings *Settings) {
-	rsettings := reflect.ValueOf(settings)
-	rname := reflect.ValueOf(s.name)
-	rdef := reflect.ValueOf(s.defaultValue)
-
-	// if (*Settings).Int was passed in, this is equivalent to settings.Int(name, def)
-	current := s.fn.Call([]reflect.Value{rsettings, rname, rdef})[0]
-	if s.mapFn.IsValid() {
-		current = s.mapFn.Call([]reflect.Value{current})[0]
-	}
-	s.ptr.Elem().Set(current)
-	fe.qmlChanged(v, s.ptr.Interface())
-}
-
 func (v *view) onSettingChange(name string) {
 	settings := v.bv.Settings()
 	fmt.Printf("SettingChanged: %s %v\n", name, settings.Get(name))
-
-	if s, ok := v.watchedSettings[name]; ok {
-		s.setFromSettings(v, settings)
-	}
 
 	switch name {
 	case "lime.syntax.updated":
