@@ -7,14 +7,14 @@ import (
 )
 
 type settingsWatcher struct {
-	ptr             interface{} // pointer to root struct
+	structPtr       interface{} // pointer to root struct
 	settings        *text.Settings
 	watchedSettings map[string]watchedSetting
 }
 
-func newSettingsWatcher(ptr interface{}, settings *text.Settings) *settingsWatcher {
+func newSettingsWatcher(structPtr interface{}, settings *text.Settings) *settingsWatcher {
 	w := &settingsWatcher{
-		ptr:             ptr,
+		structPtr:       structPtr,
 		settings:        settings,
 		watchedSettings: make(map[string]watchedSetting),
 	}
@@ -26,68 +26,68 @@ func (w *settingsWatcher) onSettingChange(name string) {
 	fmt.Printf("SettingChanged: %s %v\n", name, w.settings.Get(name))
 
 	if s, ok := w.watchedSettings[name]; ok {
-		s.setFromSettings(w.ptr, w.settings)
+		s.setFromSettings(w.structPtr, w.settings)
 	}
 }
 
 type watchedSetting interface {
-	setFromSettings(ptr interface{}, settings *text.Settings)
+	setFromSettings(structPtr interface{}, settings *text.Settings)
 }
 
-func (w *settingsWatcher) watchSettingInt(name string, ptr *int, defaultValue int, mapFn ...func(int) int) {
+func (w *settingsWatcher) watchInt(name string, fieldPtr *int, defaultValue int, mapFn ...func(int) int) {
 	s := &watchedSettingInt{
 		name:         name,
-		ptr:          ptr,
+		fieldPtr:     fieldPtr,
 		defaultValue: defaultValue,
 	}
 	if len(mapFn) == 1 {
 		s.mapFn = mapFn[0]
 	}
 	w.watchedSettings[name] = s
-	s.setFromSettings(w.ptr, w.settings)
+	s.setFromSettings(w.structPtr, w.settings)
 }
 
 type watchedSettingInt struct {
 	name         string
-	ptr          *int
+	fieldPtr     *int
 	defaultValue int
 	mapFn        func(int) int
 }
 
-func (s *watchedSettingInt) setFromSettings(ptr interface{}, settings *text.Settings) {
+func (s *watchedSettingInt) setFromSettings(structPtr interface{}, settings *text.Settings) {
 	current := settings.Int(s.name, s.defaultValue)
 	if s.mapFn != nil {
 		current = s.mapFn(current)
 	}
-	*s.ptr = current
-	fe.qmlChanged(ptr, s.ptr)
+	*s.fieldPtr = current
+	fe.qmlChanged(structPtr, s.fieldPtr)
 }
 
-func (w *settingsWatcher) watchSettingString(name string, ptr *string, defaultValue string, mapFn ...func(string) string) {
+func (w *settingsWatcher) watchString(name string, fieldPtr *string, defaultValue string, mapFn ...func(string) string) {
 	s := &watchedSettingString{
 		name:         name,
-		ptr:          ptr,
+		fieldPtr:     fieldPtr,
 		defaultValue: defaultValue,
 	}
 	if len(mapFn) == 1 {
 		s.mapFn = mapFn[0]
 	}
 	w.watchedSettings[name] = s
-	s.setFromSettings(w.ptr, w.settings)
+	s.setFromSettings(w.structPtr, w.settings)
 }
 
 type watchedSettingString struct {
 	name         string
-	ptr          *string
+	fieldPtr     *string
 	defaultValue string
 	mapFn        func(string) string
 }
 
-func (s *watchedSettingString) setFromSettings(ptr interface{}, settings *text.Settings) {
+func (s *watchedSettingString) setFromSettings(structPtr interface{}, settings *text.Settings) {
 	current := settings.String(s.name, s.defaultValue)
 	if s.mapFn != nil {
 		current = s.mapFn(current)
 	}
-	*s.ptr = current
-	fe.qmlChanged(ptr, s.ptr)
+	*s.fieldPtr = current
+	fe.qmlChanged(structPtr, s.fieldPtr)
 }

@@ -47,15 +47,15 @@ func newView(bv *backend.View) *view {
 
 	watcher := newSettingsWatcher(v, bv.Settings())
 
-	watcher.watchSettingInt("tab_size", &v.TabSize, 4)
-	watcher.watchSettingString("syntax", &v.SyntaxName, "Plain Text", func(syn string) string {
+	watcher.watchInt("tab_size", &v.TabSize, 4)
+	watcher.watchString("syntax", &v.SyntaxName, "Plain Text", func(syn string) string {
 		if syntax := backend.GetEditor().GetSyntax(syn); syntax != nil {
 			return syntax.Name()
 		}
 		return syn
 	})
-	watcher.watchSettingInt("font_size", &v.FontSize, 10)
-	watcher.watchSettingString("font_face", &v.FontFace, "Monospace")
+	watcher.watchInt("font_size", &v.FontSize, 10)
+	watcher.watchString("font_face", &v.FontFace, "Monospace")
 
 	return v
 }
