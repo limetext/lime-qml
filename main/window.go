@@ -38,7 +38,7 @@ func (w *window) launch(wg *sync.WaitGroup, component qml.Object) {
 
 	root := &FSTreeItem{path: filepath.Dir(me)}
 
-	w.SidebarTree = NewTreeListModel(component.Common().Engine(), nil, root.Children())
+	w.SidebarTree = NewTreeListModel(component.Common().Engine(), nil, []TreeListItem{root})
 
 	w.qw = component.CreateWindow(nil)
 	w.qw.Show()
