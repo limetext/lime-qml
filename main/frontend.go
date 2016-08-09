@@ -403,7 +403,7 @@ func (f *frontend) loop() (err error) {
 
 		qml.SetApplicationDisplayName("LimeText")
 		qml.SetWindowIcon("qml/lime.png")
-		qml.SetDesktopFileName("qml/org.limetext.qml.LimeText.desktop")
+		// qml.SetDesktopFileName("qml/org.limetext.qml.LimeText.desktop")
 
 		log.Fine("loading %s", qmlWindowFile)
 		component, err = engine.LoadFile(qmlWindowFile)
