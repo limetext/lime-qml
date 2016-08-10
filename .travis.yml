@@ -7,12 +7,16 @@ matrix:
     - go: 1.5
       os: linux
       env: REPORT_COVERAGE=true GO15VENDOREXPERIMENT=1
+      sudo: required
+      dist: trusty
     - go: 1.5
       os: osx
       env: REPORT_COVERAGE=false GO15VENDOREXPERIMENT=1
     - go: tip
       os: linux
       env: REPORT_COVERAGE=false
+      sudo: required
+      dist: trusty
     - go: tip
       os: osx
       env: REPORT_COVERAGE=false
@@ -23,8 +27,9 @@ matrix:
 addons:
   apt:
     sources:
-      - deadsnakes
-      - sourceline: 'ppa:canonical-qt5-edgers/ubuntu1204-qt5'
+      # - deadsnakes
+      - sourceline: 'ppa:fkrull/deadsnakes'
+      #- sourceline: 'ppa:canonical-qt5-edgers/ubuntu1204-qt5'
     packages:
       - libonig-dev
       - python3.5
