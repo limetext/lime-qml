@@ -5,5 +5,5 @@ Name=LimeText
 Comment=Lime Text code editor
 TryExec=main
 Exec=main %F
-Icon=lime.png
+Icon=lime
 MimeType=image/x-foo;
