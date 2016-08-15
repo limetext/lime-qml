@@ -25,7 +25,7 @@ User errors where the error does not result in a code change count as support an
 
 There's plenty of work that needs to be done, requiring a wide variety of skills and skill levels. The [Contributing wiki page](https://github.com/limetext/lime/wiki/Contributing) is a good place to start for some ideas.
 
-There isn't a roadmap with well staked out milestones along the way where we can just give you a specific task to work on if you are up for anything within your skill level, and the few [volunteers](https://github.com/limetext/lime/graphs/contributors) who are activily involved at the moment are already having a hard time managing everything.
+There isn't a roadmap with well staked out milestones along the way where we can just give you a specific task to work on if you are up for anything within your skill level, and the few [volunteers](https://github.com/limetext/lime/graphs/contributors) who are actively involved at the moment are already having a hard time managing everything.
 
 This is after all not a commercially backed project and any time spent here by our volunteers is their own spare time that they kindly donate to the project instead of spending time with friends, family and other interests.
 
