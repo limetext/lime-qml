@@ -1,5 +1,5 @@
-hash: aefc9f5f9214e4ff75f812de48b1fc9251ad8acbf3bf6a332f306a45704ff33b
-updated: 2016-08-12T21:00:49.083649551+01:00
+hash: 303c9cec0db7f8ba581f01afe8ff55e607b3bdf848daaeef3900e3940ef21d0a
+updated: 2016-08-16T11:50:21.505576517+01:00
 imports:
 - name: github.com/atotto/clipboard
   version: bb272b845f1112e10117e3e45ce39f690c0001ad

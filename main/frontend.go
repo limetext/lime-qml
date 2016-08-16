@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/atotto/clipboard"
 	"gopkg.in/fsnotify.v1"
 
 	"github.com/limetext/backend"
@@ -357,7 +356,6 @@ func (f *frontend) loop() (err error) {
 	ed.Init()
 	ed.SetDefaultPath("../packages/Default")
 	ed.SetUserPath("../packages/User")
-	ed.SetClipboardFuncs(clipboard.WriteAll, clipboard.ReadAll)
 
 	// Some packages(e.g Vintageos) need available window and view at start
 	// so we need at least one window and view before loading packages.
