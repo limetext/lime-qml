@@ -57,7 +57,8 @@ var fe *frontend
 
 func initFrontend() error {
 	fe = &frontend{
-		windows: make(map[*backend.Window]*window),
+		windows:     make(map[*backend.Window]*window),
+		qmlDispatch: make(chan qmlDispatch, 1000),
 	}
 	go fe.qmlBatchLoop()
 	err := fe.loop()
@@ -186,7 +187,6 @@ func (f *frontend) Inserted(changed_buffer Buffer, region_inserted Region, data_
 // Try setting batching_enabled = false to see the effects of non-batching
 func (f *frontend) qmlBatchLoop() {
 	queue := make([]qmlDispatch, 0, 128)
-	f.qmlDispatch = make(chan qmlDispatch, 1000)
 	for {
 		if len(queue) > 0 {
 			select {
