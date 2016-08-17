@@ -55,12 +55,15 @@ type (
 
 var fe *frontend
 
-func initFrontend() {
+func initFrontend() error {
 	fe = &frontend{
 		windows: make(map[*backend.Window]*window),
 	}
 	go fe.qmlBatchLoop()
-	qml.Run(fe.loop)
+	err := fe.loop()
+	fe = nil
+
+	return err
 }
 
 func (f *frontend) window(w *backend.Window) *window {

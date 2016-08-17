@@ -31,5 +31,5 @@ func main() {
 
 	qml.SetApplicationName("LimeText")
 
-	initFrontend()
+	qml.Run(initFrontend)
 }
