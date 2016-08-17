@@ -6,7 +6,7 @@ build:
 	cd main && go build
 
 test:
-	@go test -race ./main/...
+	@go test -race -v ./main/...
 
 run:
 	cd main && ./main
