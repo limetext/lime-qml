@@ -182,22 +182,24 @@ func (f *frontend) Inserted(changed_buffer Buffer, region_inserted Region, data_
 // mercy of how quick Qt happens to be rendering.
 // Try setting batching_enabled = false to see the effects of non-batching
 func (f *frontend) qmlBatchLoop() {
-	queue := make(map[qmlDispatch]bool)
+	queue := make([]qmlDispatch, 0, 128)
 	f.qmlDispatch = make(chan qmlDispatch, 1000)
 	for {
 		if len(queue) > 0 {
 			select {
-			case <-time.After(time.Millisecond * 20):
+			// QML likes to render at 60 fps, or 16 milliseconds per frame
+			case <-time.After(time.Millisecond * 8):
 				// Nothing happened for 20 milliseconds, so dispatch all queued changes
-				for k := range queue {
+				for _, k := range queue {
 					qml.Changed(k.value, k.field)
 				}
-				queue = make(map[qmlDispatch]bool)
+				queue = queue[0:0]
 			case d := <-f.qmlDispatch:
-				queue[d] = true
+				queue = append(queue, d)
 			}
 		} else {
-			queue[<-f.qmlDispatch] = true
+			dispatch := <-f.qmlDispatch
+			queue = append(queue, dispatch)
 		}
 	}
 }
