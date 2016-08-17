@@ -31,19 +31,21 @@ Item {
       z: -1
   }
 
-  Component.onCompleted: {
-    if (myView) {
-      // console.log("myView onCompleted");
-      updateMyView();
-    }
-  }
+  // Component.onCompleted: {
+  //   if (myView) {
+  //     console.log("myView onCompleted", myView);
+  //     updateMyView();
+  //   }
+  // }
   onMyViewChanged: {
+    console.log("myViewChanged", myView);
     updateMyView();
   }
 
   function updateMyView() {
       // linesModel.clear();
       if (myView) {
+        console.log("updateMyView", myView);
         myView.fix(viewRoot);
       }
   }

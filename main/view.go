@@ -6,8 +6,10 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/limetext/backend"
+	"github.com/limetext/backend/log"
 	"github.com/limetext/backend/render"
 	"github.com/limetext/qml-go"
 	. "github.com/limetext/text"
@@ -21,6 +23,7 @@ type view struct {
 	bv             *backend.View
 	qv             qml.Object
 	FormattedLines *linesList
+	linesLock      sync.Mutex
 	Title          string
 
 	watchedSettings map[string]watchedSetting
@@ -89,6 +92,13 @@ func (v *view) Back() *backend.View {
 }
 
 func (v *view) Fix(obj qml.Object) {
+	if v.qv == obj {
+		// already Fixed?
+		return
+	}
+	if v.qv != nil {
+		log.Warn("view already has a QML view set! (%v, %v)", v.qv, obj)
+	}
 	v.qv = obj
 	obj.On("destroyed", func() {
 		if v.qv == obj {
@@ -96,13 +106,18 @@ func (v *view) Fix(obj qml.Object) {
 		}
 	})
 
+	v.linesLock.Lock()
+	defer v.linesLock.Unlock()
 	qml.RunMain(func() {
 		v.FormattedLines = NewLinesList(obj.Common().Engine(), nil)
 
+		// initialize the v.FormattedLines now
+		r := Region{A: 0, B: v.bv.Size()}
+		v.insertedNoLock(nil, r, v.bv.SubstrR(r))
+
+		fe.qmlChanged(v, &v.FormattedLines)
 	})
 
-	r := Region{A: 0, B: v.bv.Size()}
-	v.Inserted(nil, r, v.bv.SubstrR(r))
 }
 
 // SetActive is called from QML when the active tab is set to this view
@@ -114,6 +129,9 @@ func (v *view) Erased(changed_buffer Buffer, region_removed Region, data_removed
 	if v.qv == nil {
 		return
 	}
+
+	v.linesLock.Lock()
+	defer v.linesLock.Unlock()
 
 	prof := util.Prof.Enter("view.Erased")
 	defer prof.Exit()
@@ -146,6 +164,12 @@ func (v *view) Inserted(changed_buffer Buffer, region_inserted Region, data_inse
 		return
 	}
 
+	v.linesLock.Lock()
+	defer v.linesLock.Unlock()
+
+	v.insertedNoLock(changed_buffer, region_inserted, data_inserted)
+}
+func (v *view) insertedNoLock(changed_buffer Buffer, region_inserted Region, data_inserted []rune) {
 	prof := util.Prof.Enter("view.Inserted")
 	defer prof.Exit()
 
