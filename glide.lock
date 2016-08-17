@@ -1,5 +1,5 @@
 hash: aefc9f5f9214e4ff75f812de48b1fc9251ad8acbf3bf6a332f306a45704ff33b
-updated: 2016-08-12T21:00:49.083649551+01:00
+updated: 2016-08-17T15:13:39.683069973-06:00
 imports:
 - name: github.com/atotto/clipboard
   version: bb272b845f1112e10117e3e45ce39f690c0001ad
@@ -45,10 +45,12 @@ imports:
   version: master
 - name: github.com/quarnster/parser
   version: 8991807ce6d383a41077a642b7b381eba1df7064
+- name: github.com/rjeczalik/notify
+  version: 48fbf980305bec9be7717fb46bb9bf2c5059c2e0
 - name: golang.org/x/sys
   version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1
   version: a8a77c9133d2d6fd8334f3260d06f60e8d80a5fb
-testImports: []
+devImports: []
