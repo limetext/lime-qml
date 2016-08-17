@@ -30,7 +30,7 @@ func TestFrontend(t *testing.T) {
 		didQuit <- struct{}{}
 	}()
 
-	if !repeatTest(func() bool { return fe != nil && len(fe.windows) == 1 }, 25, 200*time.Millisecond) {
+	if !repeatTest(func() bool { return fe != nil && len(fe.windows) == 1 }, 250, 200*time.Millisecond) {
 		t.Errorf("Expected exactly 1 window open, have %d", len(fe.windows))
 	}
 
