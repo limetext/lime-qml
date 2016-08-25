@@ -13,9 +13,10 @@ import (
 
 // A helper glue structure connecting the backend Window with the qml.Window
 type window struct {
-	bw    *backend.Window
-	qw    *qml.Window
-	views map[*backend.View]*view
+	bw          *backend.Window
+	qw          *qml.Window
+	views       map[*backend.View]*view
+	SidebarTree *TreeListModel
 }
 
 func newWindow(bw *backend.Window) *window {
@@ -30,6 +31,17 @@ func newWindow(bw *backend.Window) *window {
 // once the window closes.
 func (w *window) launch(wg *sync.WaitGroup, component qml.Object) {
 	wg.Add(1)
+
+	project := w.Back().OpenProject("testproj.sublime-project")
+
+	// me, _ := filepath.Abs(os.Args[0])
+
+	filesHeader := &HeaderItem{name: "files"}
+	// root := &FSTreeItem{path: filepath.Dir(me), isDir: true}
+	proj := &ProjectItem{Project: project}
+
+	w.SidebarTree = NewTreeListModel(component.Common().Engine(), nil, []TreeListItem{filesHeader, proj})
+
 	w.qw = component.CreateWindow(nil)
 	w.qw.Show()
 	w.qw.Set("myWindow", w)
