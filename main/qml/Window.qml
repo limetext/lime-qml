@@ -183,14 +183,14 @@ ApplicationWindow {
                 source: themeFolder + "/status-bar-background.png"
             }
             padding {
-                left: 24
+                left: 12
                 right: 24
             }
         }
         RowLayout {
             anchors.verticalCenter: parent.verticalCenter
             Label {
-                text: frontend.status
+                text: myWindow.status
                 color: statusBar.textColor
             }
         }
@@ -204,7 +204,7 @@ ApplicationWindow {
             }
             Label {
                 color: statusBar.textColor
-                text: currentView.myView ? currentView.myView.syntaxName : "0"
+                text: currentView.myView ? currentView.myView.syntaxName : "Plain Text"
             }
         }
     }

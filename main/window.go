@@ -13,9 +13,10 @@ import (
 
 // A helper glue structure connecting the backend Window with the qml.Window
 type window struct {
-	bw    *backend.Window
-	qw    *qml.Window
-	views map[*backend.View]*view
+	bw     *backend.Window
+	qw     *qml.Window
+	views  map[*backend.View]*view
+	Status string
 }
 
 func newWindow(bw *backend.Window) *window {
