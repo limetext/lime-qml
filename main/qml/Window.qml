@@ -178,44 +178,33 @@ ApplicationWindow {
     statusBar: StatusBar {
         id: statusBar
         property color textColor: "#969696"
-
         style: StatusBarStyle {
             background: Image {
                 source: themeFolder + "/status-bar-background.png"
             }
+            padding {
+                left: 24
+                right: 24
+            }
         }
-
         RowLayout {
-            anchors.fill: parent
-            spacing: 15
-
-            RowLayout {
-                anchors.fill: parent
-                spacing: 3
-                Repeater {
-                    // model: statusBarSorted
-                    delegate:
-                    Label {
-                        text: modelData[1]
-                        color: statusBar.textColor
-                    }
-                }
-                Label {
-                    text: frontend.status
-                    color: statusBar.textColor
-                }
+            anchors.verticalCenter: parent.verticalCenter
+            Label {
+                text: frontend.status
+                color: statusBar.textColor
             }
-
+        }
+        RowLayout {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 42
             Label {
                 color: statusBar.textColor
-                Layout.alignment: Qt.AlignRight
-                text: currentView && currentView.myView ? currentView.myView.tabSize : "0"
+                text: "Tab Size: "+(currentView.myView ? currentView.myView.tabSize : "0")
             }
-
             Label {
                 color: statusBar.textColor
-                Layout.alignment: Qt.AlignRight
-                text: currentView && currentView.myView ? currentView.myView.syntaxName : "0"
+                text: currentView.myView ? currentView.myView.syntaxName : "0"
             }
         }
     }
