@@ -58,10 +58,6 @@ func initFrontend() {
 	fe = &frontend{
 		windows: make(map[*backend.Window]*window),
 	}
-	go func() {
-		time.Sleep(3 * time.Second)
-		fe.StatusMessage("Hiiiiiiiiiiiiii")
-	}()
 	go fe.qmlBatchLoop()
 	qml.Run(fe.loop)
 }
@@ -286,10 +282,8 @@ func (f *frontend) onStatusChanged(bv *backend.View) {
 		log.Error("Couldn't find status changed view")
 		return
 	}
-	if v.qv == nil {
-		return
-	}
-	v.qv.Call("onStatusChanged")
+	v.updateStatus()
+	f.qmlChanged(v, &v.Status)
 }
 
 // Launches the provided command in a new goroutine
@@ -534,7 +528,6 @@ func (f *frontend) loop() (err error) {
 			for _, bv := range w.Back().Views() {
 				f.onNew(bv)
 				f.onLoad(bv)
-
 			}
 		}
 	}

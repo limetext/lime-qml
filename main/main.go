@@ -19,7 +19,6 @@ var rotateLog = flag.Bool("rotateLog", false, "Rotate debug log")
 
 func main() {
 	flag.Parse()
-
 	// Need to lock the OS thread as OSX GUI requires GUI stuff to run in the main thread
 	runtime.LockOSThread()
 

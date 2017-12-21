@@ -15,10 +15,6 @@ Item {
   property var cursor: Qt.IBeamCursor
   property bool ctrl: false
   property bool minimapVisible: true
-
-  property var statusBar: {}
-
-
   property var linesModel: myView.formattedLines
 
   function setTitle(title) {
@@ -53,12 +49,6 @@ Item {
   function onSelectionModified() {
       if (myView == undefined) return;
       editorView.onSelectionModified();
-  }
-
-  function onStatusChanged() {
-    if (myView == undefined) return;
-    var bv = myView.back();
-    statusBar = bv.status();
   }
 
   RowLayout {

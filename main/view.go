@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/limetext/backend"
@@ -25,15 +26,15 @@ type view struct {
 	FormattedLines *linesList
 	linesLock      sync.Mutex
 	Title          string
+	Status         string
 
 	watchedSettings map[string]watchedSetting
 
 	// these setting: tags are merely for ease of reading, they aren't actually used
 	TabSize    int    `setting:"tab_size"`
 	SyntaxName string `setting:"syntax"`
-
-	FontSize int    `setting:"font_size"`
-	FontFace string `setting:"font_face"`
+	FontSize   int    `setting:"font_size"`
+	FontFace   string `setting:"font_face"`
 }
 
 func newView(bv *backend.View) *view {
@@ -267,4 +268,19 @@ func (v *view) formatLine(linenum int, line *lineStruct) {
 		line.Chunks = chunks
 		fe.qmlChanged(line, line)
 	}
+}
+
+func (v *view) updateStatus() {
+	statusMap := v.Back().Status()
+	ks := make([]string, 0, len(statusMap))
+	for k := range statusMap {
+		ks = append(ks, k)
+	}
+	sort.Strings(ks)
+
+	status := ""
+	for _, k := range ks {
+		status += statusMap[k] + ", "
+	}
+	v.Status = status
 }

@@ -190,7 +190,11 @@ ApplicationWindow {
         RowLayout {
             anchors.verticalCenter: parent.verticalCenter
             Label {
-                text: myWindow.status
+                text: currentView && currentView.myView ? currentView.myView.status : ""
+                color: statusBar.textColor
+            }
+            Label {
+                text: myWindow ? myWindow.status : ""
                 color: statusBar.textColor
             }
         }
@@ -200,11 +204,11 @@ ApplicationWindow {
             spacing: 42
             Label {
                 color: statusBar.textColor
-                text: "Tab Size: "+(currentView.myView ? currentView.myView.tabSize : "0")
+                text: "Tab Size: "+(currentView && currentView.myView ? currentView.myView.tabSize : "")
             }
             Label {
                 color: statusBar.textColor
-                text: currentView.myView ? currentView.myView.syntaxName : "Plain Text"
+                text: currentView && currentView.myView ? currentView.myView.syntaxName : ""
             }
         }
     }
