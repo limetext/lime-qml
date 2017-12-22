@@ -269,6 +269,8 @@ func (f *frontend) onSelectionModified(bv *backend.View) {
 		log.Error("Couldn't find modified view")
 		return
 	}
+	v.updateSelectionStatus()
+	f.qmlChanged(v, &v.SelectionStatus)
 	if v.qv == nil {
 		return
 	}

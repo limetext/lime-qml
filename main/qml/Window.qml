@@ -194,6 +194,10 @@ ApplicationWindow {
                 color: statusBar.textColor
             }
             Label {
+                text: currentView && currentView.myView ? currentView.myView.selectionStatus : ""
+                color: statusBar.textColor
+            }
+            Label {
                 text: myWindow ? myWindow.status : ""
                 color: statusBar.textColor
             }

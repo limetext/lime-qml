@@ -20,13 +20,14 @@ import (
 // A helper glue structure connecting the backend View with the qml code that
 // then ends up rendering it.
 type view struct {
-	id             int
-	bv             *backend.View
-	qv             qml.Object
-	FormattedLines *linesList
-	linesLock      sync.Mutex
-	Title          string
-	Status         string
+	id              int
+	bv              *backend.View
+	qv              qml.Object
+	FormattedLines  *linesList
+	linesLock       sync.Mutex
+	Title           string
+	Status          string
+	SelectionStatus string // like line and column position
 
 	watchedSettings map[string]watchedSetting
 
@@ -283,4 +284,21 @@ func (v *view) updateStatus() {
 		status += statusMap[k] + ", "
 	}
 	v.Status = status
+}
+
+func (v *view) updateSelectionStatus() {
+	rs := v.Back().Sel().Regions()
+	if len(rs) > 1 {
+		v.SelectionStatus = fmt.Sprintf("%d selection regions", len(rs))
+		return
+	} else if len(rs) == 0 {
+		return
+	}
+	r := rs[0]
+	if !r.Empty() {
+		v.SelectionStatus = fmt.Sprintf("%d characters selected", r.End()-r.Begin())
+		return
+	}
+	row, col := v.Back().RowCol(r.Begin())
+	v.SelectionStatus = fmt.Sprintf("Line %d, Column %d", row, col)
 }
