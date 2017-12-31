@@ -28,7 +28,7 @@ addons:
   apt:
     sources:
       # - deadsnakes
-      - sourceline: 'ppa:fkrull/deadsnakes'
+      - sourceline: 'ppa:deadsnakes/ppa'
       #- sourceline: 'ppa:canonical-qt5-edgers/ubuntu1204-qt5'
     packages:
       - libonig-dev
